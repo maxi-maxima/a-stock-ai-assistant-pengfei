@@ -1,0 +1,52 @@
+{
+    "cash": 100000.0,
+    "positions": {
+        "000001.SZ": {
+            "volume": 2700,
+            "cost": 10.91,
+            "meta": {
+                "origin_decision_id": "000001SZ_20260214115104_18a588",
+                "last_buy_decision_id": "000001SZ_20260214115104_18a588",
+                "decision_ids": [
+                    "000001SZ_20260214115104_18a588"
+                ],
+                "last_signal_source": {
+                    "source": "luck"
+                }
+            }
+        },
+        "000862.SZ": {
+            "volume": 4800,
+            "cost": 6.18,
+            "meta": {
+                "origin_decision_id": "000862SZ_20260214140025_84c755",
+                "last_buy_decision_id": "000862SZ_20260214140025_84c755",
+                "decision_ids": [
+                    "000862SZ_20260214140025_84c755"
+                ],
+                "last_signal_source": {
+                    "source": "luck",
+                    "method": "xiaoliuren",
+                    "palace": "小吉"
+                }
+            }
+        },
+        "002595.SZ": {
+            "volume": 300,
+            "cost": 94.29,
+            "meta": {
+                "origin_decision_id": "002595SZ_20260214224305_bbdae6",
+                "last_buy_decision_id": "002595SZ_20260214224305_bbdae6",
+                "decision_ids": [
+                    "002595SZ_20260214224305_bbdae6"
+                ],
+                "last_signal_source": {
+                    "source": "luck",
+                    "method": "xiaoliuren",
+                    "palace": "速喜"
+                }
+            }
+        }
+    },
+    "history": []
+}

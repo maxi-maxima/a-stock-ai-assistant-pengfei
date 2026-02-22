@@ -1,0 +1,629 @@
+[
+  {
+    "time": "2026-02-21 23:14:10",
+    "code": "002629",
+    "name": "仁智股份",
+    "action": "HOLD",
+    "score": 0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": 5.0,
+    "data_quality": {
+      "rows": 167,
+      "last_date": "2026-02-13",
+      "last_trade_date": "2026-01-22",
+      "delta_days": -22,
+      "stale": false
+    },
+    "decision_id": "002629_20260221231410_06dd36",
+    "settings": {
+      "deep_risk": false,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 14,
+      "grid_multiplier": 1.0
+    }
+  },
+  {
+    "time": "2026-02-21 23:02:58",
+    "code": "002059",
+    "name": "云南旅游",
+    "action": "HOLD",
+    "score": 0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": 19.0,
+    "data_quality": {
+      "rows": 167,
+      "last_date": "2026-02-13",
+      "last_trade_date": "2026-01-22",
+      "delta_days": -22,
+      "stale": false
+    },
+    "decision_id": "002059_20260221230257_8e8572",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 14,
+      "grid_multiplier": 1.0
+    }
+  },
+  {
+    "time": "2026-02-21 22:48:54",
+    "code": "300830",
+    "name": "金现代",
+    "action": "HOLD",
+    "score": 91.0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": 44.0,
+    "data_quality": {
+      "rows": 167,
+      "last_date": "2026-02-13",
+      "last_trade_date": "2026-01-22",
+      "delta_days": -22,
+      "stale": false
+    },
+    "decision_id": "300830_20260221224853_760200",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 14,
+      "grid_multiplier": 1.0
+    }
+  },
+  {
+    "time": "2026-02-21 22:35:02",
+    "code": "002059",
+    "name": "云南旅游",
+    "action": "HOLD",
+    "score": 0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": null,
+    "data_quality": {
+      "rows": 167,
+      "last_date": "2026-02-13",
+      "last_trade_date": null,
+      "delta_days": null,
+      "stale": false
+    },
+    "decision_id": "002059_20260221223502_576fc2",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 14,
+      "grid_multiplier": 1.0
+    }
+  },
+  {
+    "time": "2026-02-21 22:09:57",
+    "code": "000862",
+    "name": "银星能源",
+    "action": "HOLD",
+    "score": 40,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": null,
+    "data_quality": {
+      "rows": 167,
+      "last_date": "2026-02-13",
+      "last_trade_date": null,
+      "delta_days": null,
+      "stale": false
+    },
+    "decision_id": "000862_20260221220956_0e1979",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 14,
+      "grid_multiplier": 1.0
+    }
+  },
+  {
+    "time": "2026-02-21 21:21:07",
+    "code": "002059",
+    "name": "云南旅游",
+    "action": "HOLD",
+    "score": 0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": null,
+    "data_quality": {
+      "rows": 167,
+      "last_date": "2026-02-13",
+      "last_trade_date": null,
+      "delta_days": null,
+      "stale": false
+    },
+    "decision_id": "002059_20260221212106_f36aa7",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 14,
+      "grid_multiplier": 1.0
+    }
+  },
+  {
+    "time": "2026-02-21 21:20:12",
+    "code": "002059",
+    "name": "云南旅游",
+    "action": "HOLD",
+    "score": 0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": null,
+    "data_quality": {
+      "rows": 167,
+      "last_date": "2026-02-13",
+      "last_trade_date": null,
+      "delta_days": null,
+      "stale": false
+    },
+    "decision_id": "002059_20260221212012_d48ac9",
+    "settings": {
+      "deep_risk": false,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 14,
+      "grid_multiplier": 1.0
+    }
+  },
+  {
+    "time": "2026-02-17 13:22:29",
+    "code": "000019",
+    "name": "深粮控股",
+    "action": "HOLD",
+    "score": 58.0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": null,
+    "data_quality": {
+      "rows": 169,
+      "last_date": "2026-02-13",
+      "last_trade_date": null,
+      "delta_days": null,
+      "stale": false
+    },
+    "decision_id": "000019_20260217132229_ecd5e5",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 20,
+      "grid_multiplier": 1.5
+    }
+  },
+  {
+    "time": "2026-02-17 12:23:03",
+    "code": "002059",
+    "name": "云南旅游",
+    "action": "HOLD",
+    "score": 0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": null,
+    "data_quality": {
+      "rows": 169,
+      "last_date": "2026-02-13",
+      "last_trade_date": null,
+      "delta_days": null,
+      "stale": false
+    },
+    "decision_id": "002059_20260217122302_90980a",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 20,
+      "grid_multiplier": 1.5
+    }
+  },
+  {
+    "time": "2026-02-15 10:21:37",
+    "code": "300830",
+    "name": "金现代",
+    "action": "HOLD",
+    "score": 91.0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": 44.0,
+    "data_quality": {
+      "rows": 171,
+      "last_date": "2026-02-13",
+      "last_trade_date": "2026-01-16",
+      "delta_days": -28,
+      "stale": false
+    },
+    "decision_id": "300830_20260215102137_6c427b",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 20,
+      "grid_multiplier": 1.5
+    }
+  },
+  {
+    "time": "2026-02-15 10:14:08",
+    "code": "002059",
+    "name": "云南旅游",
+    "action": "HOLD",
+    "score": 0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": 19.0,
+    "data_quality": {
+      "rows": 171,
+      "last_date": "2026-02-13",
+      "last_trade_date": "2026-01-16",
+      "delta_days": -28,
+      "stale": false
+    },
+    "decision_id": "002059_20260215101408_343255",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 20,
+      "grid_multiplier": 1.5
+    }
+  },
+  {
+    "time": "2026-02-15 10:11:00",
+    "code": "000862",
+    "name": "000862",
+    "action": "HOLD",
+    "score": 48.0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": null,
+    "data_quality": {
+      "rows": 171,
+      "last_date": "2026-02-13",
+      "last_trade_date": null,
+      "delta_days": null,
+      "stale": false
+    },
+    "decision_id": "000862_20260215101100_814ec6",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 20,
+      "grid_multiplier": 1.5
+    }
+  },
+  {
+    "time": "2026-02-15 09:53:28",
+    "code": "002629",
+    "name": "002629",
+    "action": "HOLD",
+    "score": 59.0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": null,
+    "data_quality": {
+      "rows": 171,
+      "last_date": "2026-02-13",
+      "last_trade_date": null,
+      "delta_days": null,
+      "stale": false
+    },
+    "decision_id": "002629_20260215095328_883e8d",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 20,
+      "grid_multiplier": 1.5
+    }
+  },
+  {
+    "time": "2026-02-15 09:52:55",
+    "code": "000001.SZ",
+    "name": "000001.SZ",
+    "action": "HOLD",
+    "score": 0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": null,
+    "data_quality": {
+      "rows": 171,
+      "last_date": "2026-02-13",
+      "last_trade_date": null,
+      "delta_days": null,
+      "stale": false
+    },
+    "decision_id": "000001SZ_20260215095255_396613",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 20,
+      "grid_multiplier": 1.5
+    }
+  },
+  {
+    "time": "2026-02-15 09:51:32",
+    "code": "000001.SZ",
+    "name": "000001.SZ",
+    "action": "HOLD",
+    "score": 0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": null,
+    "data_quality": {
+      "rows": 171,
+      "last_date": "2026-02-13",
+      "last_trade_date": null,
+      "delta_days": null,
+      "stale": false
+    },
+    "decision_id": "000001SZ_20260215095132_e51cb0",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 20,
+      "grid_multiplier": 1.5
+    }
+  },
+  {
+    "time": "2026-02-14 23:44:37",
+    "code": "000019",
+    "name": "深粮控股",
+    "action": "HOLD",
+    "score": 67.5,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": 59.0,
+    "data_quality": {
+      "rows": 172,
+      "last_date": "2026-02-13",
+      "last_trade_date": "2026-01-15",
+      "delta_days": -29,
+      "stale": false
+    },
+    "decision_id": "000019_20260214234436_5e735b",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 20,
+      "grid_multiplier": 1.5
+    }
+  },
+  {
+    "time": "2026-02-14 23:18:05",
+    "code": "000559",
+    "name": "万向钱潮",
+    "action": "HOLD",
+    "score": 93.0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": 53.0,
+    "data_quality": {
+      "rows": 172,
+      "last_date": "2026-02-13",
+      "last_trade_date": "2026-01-15",
+      "delta_days": -29,
+      "stale": false
+    },
+    "decision_id": "000559_20260214231805_c90bd1",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 20,
+      "grid_multiplier": 1.5
+    }
+  },
+  {
+    "time": "2026-02-14 12:01:39",
+    "code": "000001.SZ",
+    "name": "平安银行",
+    "action": "BUY",
+    "score": 0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": 44.0,
+    "data_quality": {
+      "rows": 172,
+      "last_date": "2026-02-13",
+      "last_trade_date": "2026-01-15",
+      "delta_days": -29,
+      "stale": false
+    },
+    "decision_id": "000001SZ_20260214120139_c35b28",
+    "settings": {
+      "deep_risk": true,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 10,
+      "grid_multiplier": 0.8
+    }
+  },
+  {
+    "time": "2026-02-13 22:35:32",
+    "code": "002344",
+    "name": "海宁皮城",
+    "action": "HOLD",
+    "score": 72.0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": 52.0,
+    "data_quality": {
+      "rows": 172,
+      "last_date": "2026-02-13",
+      "last_trade_date": "2026-01-14",
+      "delta_days": -30,
+      "stale": false
+    },
+    "settings": {
+      "deep_risk": false,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 14,
+      "grid_multiplier": 1.0
+    }
+  },
+  {
+    "time": "2026-02-13 22:28:57",
+    "code": "300830",
+    "name": "金现代",
+    "action": "HOLD",
+    "score": 95.0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": 44.0,
+    "data_quality": {
+      "rows": 172,
+      "last_date": "2026-02-13",
+      "last_trade_date": "2026-01-14",
+      "delta_days": -30,
+      "stale": false
+    },
+    "settings": {
+      "deep_risk": false,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 14,
+      "grid_multiplier": 1.0
+    }
+  },
+  {
+    "time": "2026-02-13 22:21:13",
+    "code": "002059",
+    "name": "云南旅游",
+    "action": "HOLD",
+    "score": 0,
+    "source": {
+      "source": "manual",
+      "label": "手动输入"
+    },
+    "fin_score": 19.0,
+    "data_quality": {
+      "rows": 172,
+      "last_date": "2026-02-13",
+      "last_trade_date": "2026-01-14",
+      "delta_days": -30,
+      "stale": false
+    },
+    "settings": {
+      "deep_risk": false,
+      "paper_execute": false,
+      "enable_news": true,
+      "enable_financial": true,
+      "enable_kb": true,
+      "enable_morning": true,
+      "grid_period": 14,
+      "grid_multiplier": 1.0
+    }
+  }
+]

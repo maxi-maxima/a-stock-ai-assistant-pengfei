@@ -1,0 +1,43 @@
+# Example LLM config (do NOT store real keys here)
+
+blue_brain:
+  name: "DeepSeek (Strategy)"
+  base_url: "https://api.deepseek.com"
+  api_key: "YOUR_KEY"
+  model: "deepseek-chat"
+
+red_brain:
+  name: "Qwen (Tactics)"
+  base_url: "https://api.xuansuan.top/v1"
+  api_key: "YOUR_KEY"
+  model: "qwen3-max"
+
+green_brain:
+  name: "Kimi (Judge)"
+  base_url: "https://api.moonshot.cn/v1"
+  api_key: "YOUR_KEY"
+  model: "moonshot-v1-8k"
+
+system:
+  # 国内镜像或自定义 HuggingFace 端点
+  # 例如: https://hf-mirror.com
+  hf_endpoint: ""
+  # 备选端点列表 (逗号分隔或列表)
+  hf_endpoint_candidates: []
+  # 自动追加国内镜像 (hf-mirror.com)
+  auto_hf_mirror: false
+  # 本地嵌入模型路径 (若已手动下载到本地)
+  embedding_model_path: ""
+  # 嵌入模型名称 (默认: all-MiniLM-L6-v2)
+  embedding_model: "all-MiniLM-L6-v2"
+  # 离线嵌入 (仅使用本地模型)
+  embedding_offline: false
+  # 无法访问端点时跳过向量库初始化
+  embedding_skip_if_unreachable: true
+  embedding_probe_timeout: 2
+  # 禁用 Chroma 向量库
+  chroma_disabled: false
+  chroma_offline: false
+  tushare_token: "YOUR_TUSHARE_TOKEN"
+  max_retries: 3
+  timeout: 30

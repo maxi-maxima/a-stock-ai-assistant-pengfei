@@ -1,0 +1,292 @@
+{
+  "codes": [
+    {
+      "code": "000006.SZ",
+      "name": "000006.SZ",
+      "init_price": null,
+      "source": null,
+      "source_detail": null,
+      "added_at": null
+    },
+    {
+      "code": "000027.SZ",
+      "name": "000027.SZ",
+      "init_price": null,
+      "source": null,
+      "source_detail": null,
+      "added_at": null
+    },
+    {
+      "code": "000066.SZ",
+      "name": "000066.SZ",
+      "init_price": null,
+      "source": null,
+      "source_detail": null,
+      "added_at": null
+    },
+    {
+      "code": "000089.SZ",
+      "name": "000089.SZ",
+      "init_price": null,
+      "source": null,
+      "source_detail": null,
+      "added_at": null
+    },
+    {
+      "code": "000158.SZ",
+      "name": "000158.SZ",
+      "init_price": 20.15,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:30"
+    },
+    {
+      "code": "000498.SZ",
+      "name": "000498.SZ",
+      "init_price": null,
+      "source": null,
+      "source_detail": null,
+      "added_at": null
+    },
+    {
+      "code": "000507.SZ",
+      "name": "000507.SZ",
+      "init_price": null,
+      "source": null,
+      "source_detail": null,
+      "added_at": null
+    },
+    {
+      "code": "000532.SZ",
+      "name": "000532.SZ",
+      "init_price": null,
+      "source": null,
+      "source_detail": null,
+      "added_at": null
+    },
+    {
+      "code": "000539.SZ",
+      "name": "000539.SZ",
+      "init_price": null,
+      "source": null,
+      "source_detail": null,
+      "added_at": null
+    },
+    {
+      "code": "000550.SZ",
+      "name": "000550.SZ",
+      "init_price": null,
+      "source": null,
+      "source_detail": null,
+      "added_at": null
+    },
+    {
+      "code": "000576.SZ",
+      "name": "000576.SZ",
+      "init_price": null,
+      "source": null,
+      "source_detail": null,
+      "added_at": null
+    },
+    {
+      "code": "000600.SZ",
+      "name": "000600.SZ",
+      "init_price": null,
+      "source": null,
+      "source_detail": null,
+      "added_at": null
+    },
+    {
+      "code": "000680.SZ",
+      "name": "000680.SZ",
+      "init_price": null,
+      "source": null,
+      "source_detail": null,
+      "added_at": null
+    },
+    {
+      "code": "000686.SZ",
+      "name": "000686.SZ",
+      "init_price": null,
+      "source": null,
+      "source_detail": null,
+      "added_at": null
+    },
+    {
+      "code": "000688.SZ",
+      "name": "000688.SZ",
+      "init_price": null,
+      "source": null,
+      "source_detail": null,
+      "added_at": null
+    },
+    {
+      "code": "000922.SZ",
+      "name": "000922.SZ",
+      "init_price": 15.19,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:30"
+    },
+    {
+      "code": "600629.SH",
+      "name": "600629.SH",
+      "init_price": 21.19,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:30"
+    },
+    {
+      "code": "000559.SZ",
+      "name": "000559.SZ",
+      "init_price": 20.31,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:30"
+    },
+    {
+      "code": "000002.SZ",
+      "name": "000002.SZ",
+      "init_price": 4.97,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:30"
+    },
+    {
+      "code": "000007.SZ",
+      "name": "000007.SZ",
+      "init_price": 12.41,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:30"
+    },
+    {
+      "code": "000672.SZ",
+      "name": "000672.SZ",
+      "init_price": 15.8,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:30"
+    },
+    {
+      "code": "000738.SZ",
+      "name": "000738.SZ",
+      "init_price": 29.45,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:30"
+    },
+    {
+      "code": "000798.SZ",
+      "name": "000798.SZ",
+      "init_price": 12.46,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:30"
+    },
+    {
+      "code": "000859.SZ",
+      "name": "000859.SZ",
+      "init_price": 11.97,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:30"
+    },
+    {
+      "code": "000890.SZ",
+      "name": "000890.SZ",
+      "init_price": 6.03,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:31"
+    },
+    {
+      "code": "000973.SZ",
+      "name": "000973.SZ",
+      "init_price": 13.88,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:31"
+    },
+    {
+      "code": "000977.SZ",
+      "name": "000977.SZ",
+      "init_price": 65.33,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:31"
+    },
+    {
+      "code": "600097.SH",
+      "name": "600097.SH",
+      "init_price": 12.55,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:31"
+    },
+    {
+      "code": "600288.SH",
+      "name": "600288.SH",
+      "init_price": 15.85,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:31"
+    },
+    {
+      "code": "600372.SH",
+      "name": "600372.SH",
+      "init_price": 16.06,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:31"
+    },
+    {
+      "code": "600397.SH",
+      "name": "600397.SH",
+      "init_price": 15.49,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:31"
+    },
+    {
+      "code": "600410.SH",
+      "name": "600410.SH",
+      "init_price": 24.61,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:31"
+    },
+    {
+      "code": "600671.SH",
+      "name": "600671.SH",
+      "init_price": 20.42,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:31"
+    },
+    {
+      "code": "600673.SH",
+      "name": "600673.SH",
+      "init_price": 37.8,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:31"
+    },
+    {
+      "code": "600725.SH",
+      "name": "600725.SH",
+      "init_price": 4.81,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:31"
+    },
+    {
+      "code": "600791.SH",
+      "name": "600791.SH",
+      "init_price": 7.29,
+      "source": "strategy_pool_auto",
+      "source_detail": "auto_pool:20260217_121930",
+      "added_at": "2026-02-17T12:19:31"
+    }
+  ]
+}

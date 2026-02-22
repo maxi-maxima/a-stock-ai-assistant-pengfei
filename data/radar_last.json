@@ -1,0 +1,16 @@
+{
+  "time": "2026-02-14 22:45:16",
+  "scope": "global",
+  "strategy": "HotMoney (游资回马枪)",
+  "strategy_code": "hot_money",
+  "count": 1,
+  "candidates": [
+    {
+      "code": "000559.SZ",
+      "price": 20.31,
+      "pct": 3.52,
+      "reason": "游资回马枪",
+      "fin_score": null
+    }
+  ]
+}

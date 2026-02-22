@@ -1,0 +1,28 @@
+blue_brain:
+  name: DeepSeek (Strategy)
+  base_url: https://api.deepseek.com
+  api_key: ''
+  model: deepseek-chat
+red_brain:
+  name: Qwen (Tactics)
+  base_url: https://api.xuansuan.top/v1
+  api_key: ''
+  model: qwen3-max
+green_brain:
+  name: Kimi (Judge)
+  base_url: https://api.moonshot.cn/v1
+  api_key: ''
+  model: moonshot-v1-8k
+system:
+  tushare_token: ''
+  max_retries: 3
+  timeout: 30
+  hf_endpoint: ''
+  hf_endpoint_candidates: []
+  auto_hf_mirror: true
+  embedding_model: all-MiniLM-L6-v2
+  embedding_model_path: ''
+  embedding_offline: false
+  embedding_skip_if_unreachable: true
+  embedding_probe_timeout: 2
+  chroma_offline: false

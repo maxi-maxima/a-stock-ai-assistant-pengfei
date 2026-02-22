@@ -1,0 +1,387 @@
+[
+  {
+    "time": "2026-02-14 22:45:16",
+    "scope": "global",
+    "strategy": "HotMoney (游资回马枪)",
+    "strategy_code": "hot_money",
+    "count": 1,
+    "candidates": [
+      {
+        "code": "000559.SZ",
+        "price": 20.31,
+        "pct": 3.52,
+        "reason": "游资回马枪",
+        "fin_score": null
+      }
+    ]
+  },
+  {
+    "time": "2026-02-14 00:33:29",
+    "scope": "global",
+    "strategy": "TailStrength (尾盘强势)",
+    "strategy_code": "tail_strength",
+    "count": 21,
+    "candidates": [
+      {
+        "code": "000002.SZ",
+        "price": 4.97,
+        "pct": 1.02,
+        "reason": "尾盘强势: 动量3.3%/1.8%, 收盘靠高位0.82, 评分3",
+        "fin_score": null
+      },
+      {
+        "code": "000007.SZ",
+        "price": 12.41,
+        "pct": 1.55,
+        "reason": "尾盘强势: 动量5.0%/14.1%, 收盘靠高位0.88, 评分4",
+        "fin_score": null
+      },
+      {
+        "code": "000559.SZ",
+        "price": 20.31,
+        "pct": 3.52,
+        "reason": "尾盘强势: 动量16.6%/17.9%, 收盘靠高位0.72, 评分4",
+        "fin_score": null
+      },
+      {
+        "code": "000672.SZ",
+        "price": 15.8,
+        "pct": 1.41,
+        "reason": "尾盘强势: 动量7.0%/9.5%, 收盘靠高位0.80, 评分4",
+        "fin_score": null
+      },
+      {
+        "code": "000738.SZ",
+        "price": 29.45,
+        "pct": 7.44,
+        "reason": "尾盘强势: 动量10.7%/20.5%, 收盘靠高位0.75, 评分4",
+        "fin_score": null
+      },
+      {
+        "code": "000798.SZ",
+        "price": 12.46,
+        "pct": 9.97,
+        "reason": "尾盘强势: 动量8.4%/7.9%, 收盘靠高位1.00, 评分5",
+        "fin_score": null
+      },
+      {
+        "code": "000859.SZ",
+        "price": 11.97,
+        "pct": 10.02,
+        "reason": "尾盘强势: 动量15.8%/20.3%, 收盘靠高位1.00, 评分5",
+        "fin_score": null
+      },
+      {
+        "code": "000890.SZ",
+        "price": 6.03,
+        "pct": 10.04,
+        "reason": "尾盘强势: 动量12.3%/16.6%, 收盘靠高位1.00, 评分4",
+        "fin_score": null
+      },
+      {
+        "code": "000922.SZ",
+        "price": 15.19,
+        "pct": 0.73,
+        "reason": "尾盘强势: 动量8.3%/7.7%, 收盘靠高位0.73, 评分4",
+        "fin_score": null
+      },
+      {
+        "code": "000973.SZ",
+        "price": 13.88,
+        "pct": 5.31,
+        "reason": "尾盘强势: 动量7.5%/12.3%, 收盘靠高位0.75, 评分5",
+        "fin_score": null
+      },
+      {
+        "code": "000977.SZ",
+        "price": 65.33,
+        "pct": 0.86,
+        "reason": "尾盘强势: 动量10.0%/3.9%, 收盘靠高位0.73, 评分4",
+        "fin_score": null
+      },
+      {
+        "code": "600097.SH",
+        "price": 12.55,
+        "pct": 2.28,
+        "reason": "尾盘强势: 动量2.1%/2.0%, 收盘靠高位0.73, 评分4",
+        "fin_score": null
+      },
+      {
+        "code": "600288.SH",
+        "price": 15.85,
+        "pct": 2.26,
+        "reason": "尾盘强势: 动量4.5%/3.9%, 收盘靠高位0.72, 评分4",
+        "fin_score": null
+      },
+      {
+        "code": "600372.SH",
+        "price": 16.06,
+        "pct": 2.55,
+        "reason": "尾盘强势: 动量4.3%/3.5%, 收盘靠高位0.71, 评分4",
+        "fin_score": null
+      },
+      {
+        "code": "600397.SH",
+        "price": 15.49,
+        "pct": 8.25,
+        "reason": "尾盘强势: 动量40.9%/54.6%, 收盘靠高位0.78, 评分3",
+        "fin_score": null
+      },
+      {
+        "code": "600410.SH",
+        "price": 24.61,
+        "pct": 10.01,
+        "reason": "尾盘强势: 动量15.3%/17.1%, 收盘靠高位1.00, 评分4",
+        "fin_score": null
+      },
+      {
+        "code": "600629.SH",
+        "price": 21.19,
+        "pct": 10.02,
+        "reason": "尾盘强势: 动量10.7%/5.2%, 收盘靠高位1.00, 评分3",
+        "fin_score": null
+      },
+      {
+        "code": "600671.SH",
+        "price": 20.42,
+        "pct": 1.54,
+        "reason": "尾盘强势: 动量3.4%/6.7%, 收盘靠高位0.86, 评分3",
+        "fin_score": null
+      },
+      {
+        "code": "600673.SH",
+        "price": 37.8,
+        "pct": 3.34,
+        "reason": "尾盘强势: 动量30.8%/38.8%, 收盘靠高位0.77, 评分3",
+        "fin_score": null
+      },
+      {
+        "code": "600725.SH",
+        "price": 4.81,
+        "pct": 1.91,
+        "reason": "尾盘强势: 动量5.0%/1.1%, 收盘靠高位0.87, 评分3",
+        "fin_score": null
+      },
+      {
+        "code": "600791.SH",
+        "price": 7.29,
+        "pct": 9.95,
+        "reason": "尾盘强势: 动量14.4%/19.3%, 收盘靠高位1.00, 评分4",
+        "fin_score": null
+      }
+    ]
+  },
+  {
+    "time": "2026-02-13 16:08:06",
+    "scope": "watchlist",
+    "strategy": "DNA (风格克隆)",
+    "strategy_code": "dna",
+    "count": 15,
+    "candidates": [
+      {
+        "code": "000006.SZ",
+        "price": 9.43,
+        "pct": 2.5,
+        "reason": "符合 DNA (RSI:52.6)"
+      },
+      {
+        "code": "000027.SZ",
+        "price": 6.61,
+        "pct": -1.93,
+        "reason": "符合 DNA (RSI:34.7)"
+      },
+      {
+        "code": "000066.SZ",
+        "price": 16.72,
+        "pct": 1.33,
+        "reason": "符合 DNA (RSI:44.0)"
+      },
+      {
+        "code": "000089.SZ",
+        "price": 7.19,
+        "pct": -0.69,
+        "reason": "符合 DNA (RSI:53.7)"
+      },
+      {
+        "code": "000158.SZ",
+        "price": 20.15,
+        "pct": -0.05,
+        "reason": "符合 DNA (RSI:39.8)"
+      },
+      {
+        "code": "000498.SZ",
+        "price": 6.11,
+        "pct": -1.93,
+        "reason": "符合 DNA (RSI:41.7)"
+      },
+      {
+        "code": "000507.SZ",
+        "price": 5.35,
+        "pct": -2.37,
+        "reason": "符合 DNA (RSI:40.6)"
+      },
+      {
+        "code": "000532.SZ",
+        "price": 16.34,
+        "pct": 0.93,
+        "reason": "符合 DNA (RSI:46.2)"
+      },
+      {
+        "code": "000539.SZ",
+        "price": 4.76,
+        "pct": -3.05,
+        "reason": "符合 DNA (RSI:40.0)"
+      },
+      {
+        "code": "000550.SZ",
+        "price": 17.93,
+        "pct": -0.66,
+        "reason": "符合 DNA (RSI:37.0)"
+      },
+      {
+        "code": "000576.SZ",
+        "price": 10.87,
+        "pct": 1.12,
+        "reason": "符合 DNA (RSI:33.3)"
+      },
+      {
+        "code": "000600.SZ",
+        "price": 8.36,
+        "pct": -5.64,
+        "reason": "符合 DNA (RSI:44.1)"
+      },
+      {
+        "code": "000680.SZ",
+        "price": 13.05,
+        "pct": -1.66,
+        "reason": "符合 DNA (RSI:54.0)"
+      },
+      {
+        "code": "000686.SZ",
+        "price": 8.91,
+        "pct": -1.33,
+        "reason": "符合 DNA (RSI:32.6)"
+      },
+      {
+        "code": "000688.SZ",
+        "price": 32.38,
+        "pct": 2.83,
+        "reason": "符合 DNA (RSI:50.1)"
+      }
+    ]
+  },
+  {
+    "time": "2026-02-13 16:07:20",
+    "scope": "global",
+    "strategy": "DNA (风格克隆)",
+    "strategy_code": "dna",
+    "count": 15,
+    "candidates": [
+      {
+        "code": "000006.SZ",
+        "price": 9.43,
+        "pct": 2.5,
+        "reason": "符合 DNA (RSI:52.6)"
+      },
+      {
+        "code": "000027.SZ",
+        "price": 6.61,
+        "pct": -1.93,
+        "reason": "符合 DNA (RSI:34.7)"
+      },
+      {
+        "code": "000066.SZ",
+        "price": 16.72,
+        "pct": 1.33,
+        "reason": "符合 DNA (RSI:44.0)"
+      },
+      {
+        "code": "000089.SZ",
+        "price": 7.19,
+        "pct": -0.69,
+        "reason": "符合 DNA (RSI:53.7)"
+      },
+      {
+        "code": "000158.SZ",
+        "price": 20.15,
+        "pct": -0.05,
+        "reason": "符合 DNA (RSI:39.8)"
+      },
+      {
+        "code": "000498.SZ",
+        "price": 6.11,
+        "pct": -1.93,
+        "reason": "符合 DNA (RSI:41.7)"
+      },
+      {
+        "code": "000507.SZ",
+        "price": 5.35,
+        "pct": -2.37,
+        "reason": "符合 DNA (RSI:40.6)"
+      },
+      {
+        "code": "000532.SZ",
+        "price": 16.34,
+        "pct": 0.93,
+        "reason": "符合 DNA (RSI:46.2)"
+      },
+      {
+        "code": "000539.SZ",
+        "price": 4.76,
+        "pct": -3.05,
+        "reason": "符合 DNA (RSI:40.0)"
+      },
+      {
+        "code": "000550.SZ",
+        "price": 17.93,
+        "pct": -0.66,
+        "reason": "符合 DNA (RSI:37.0)"
+      },
+      {
+        "code": "000576.SZ",
+        "price": 10.87,
+        "pct": 1.12,
+        "reason": "符合 DNA (RSI:33.3)"
+      },
+      {
+        "code": "000600.SZ",
+        "price": 8.36,
+        "pct": -5.64,
+        "reason": "符合 DNA (RSI:44.1)"
+      },
+      {
+        "code": "000680.SZ",
+        "price": 13.05,
+        "pct": -1.66,
+        "reason": "符合 DNA (RSI:54.0)"
+      },
+      {
+        "code": "000686.SZ",
+        "price": 8.91,
+        "pct": -1.33,
+        "reason": "符合 DNA (RSI:32.6)"
+      },
+      {
+        "code": "000688.SZ",
+        "price": 32.38,
+        "pct": 2.83,
+        "reason": "符合 DNA (RSI:50.1)"
+      }
+    ]
+  },
+  {
+    "time": "2026-02-13 16:07:03",
+    "scope": "global",
+    "strategy": "HotMoney (游资回马枪)",
+    "strategy_code": "hot_money",
+    "count": 1,
+    "candidates": [
+      {
+        "code": "000559.SZ",
+        "price": 20.31,
+        "pct": 3.52,
+        "reason": "游资回马枪"
+      }
+    ]
+  }
+]

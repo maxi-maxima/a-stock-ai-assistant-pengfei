@@ -1,0 +1,7 @@
+{
+  "min_samples": 5,
+  "watch_below": -0.02,
+  "disable_below": -0.08,
+  "min_win_rate": 0.4,
+  "cooldown_days": 3
+}

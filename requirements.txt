@@ -1,0 +1,13 @@
+streamlit
+pandas
+numpy
+plotly
+tushare
+akshare
+chromadb
+sentence-transformers
+langgraph
+openai
+requests
+schedule
+PyYAML

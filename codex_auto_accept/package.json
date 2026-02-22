@@ -1,0 +1,71 @@
+{
+  "name": "codex-auto-accept",
+  "displayName": "Codex Auto Accept",
+  "publisher": "local",
+  "engines": { "vscode": "^1.60.0" },
+  "version": "0.0.2",
+  "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:codexAuto.toggle",
+    "onCommand:codexAuto.acceptOnce",
+    "onCommand:codexAuto.start",
+    "onCommand:codexAuto.stop"
+  ],
+  "contributes": {
+    "commands": [
+      { "command": "codexAuto.toggle", "title": "Codex Auto Accept: Toggle" },
+      { "command": "codexAuto.acceptOnce", "title": "Codex Auto Accept: Accept Once" },
+      { "command": "codexAuto.start", "title": "Codex Auto Accept: Start" },
+      { "command": "codexAuto.stop", "title": "Codex Auto Accept: Stop" }
+    ],
+    "configuration": {
+      "title": "Codex Auto Accept",
+      "properties": {
+        "codexAuto.intervalMs": {
+          "type": "number",
+          "default": 500,
+          "minimum": 100,
+          "maximum": 5000,
+          "description": "Polling interval in milliseconds."
+        },
+        "codexAuto.autoStart": {
+          "type": "boolean",
+          "default": false,
+          "description": "Start auto-accept on VS Code startup."
+        },
+        "codexAuto.showNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show start/stop notifications."
+        },
+        "codexAuto.runWhenSelectionEmpty": {
+          "type": "boolean",
+          "default": true,
+          "description": "Only run when there is no active selection."
+        },
+        "codexAuto.runWhenEditorFocused": {
+          "type": "boolean",
+          "default": true,
+          "description": "Only run when VS Code is focused."
+        },
+        "codexAuto.allowedSchemes": {
+          "type": "array",
+          "default": ["file", "untitled"],
+          "items": { "type": "string" },
+          "description": "Document URI schemes where auto-accept is allowed."
+        },
+        "codexAuto.acceptCommands": {
+          "type": "array",
+          "default": [
+            "editor.action.inlineSuggest.commit",
+            "acceptSelectedSuggestion",
+            "editor.action.acceptSelectedSuggestion"
+          ],
+          "items": { "type": "string" },
+          "description": "Commands to execute sequentially when attempting to accept a suggestion."
+        }
+      }
+    }
+  }
+}

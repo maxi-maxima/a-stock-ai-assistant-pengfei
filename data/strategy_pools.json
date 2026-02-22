@@ -1,0 +1,330 @@
+{
+  "tail_strength": {
+    "updated_at": "2026-02-16T22:53:34",
+    "codes": [
+      {
+        "code": "000559.SZ",
+        "name": "000559.SZ"
+      },
+      {
+        "code": "000002.SZ",
+        "name": "000002.SZ"
+      },
+      {
+        "code": "000007.SZ",
+        "name": "000007.SZ"
+      },
+      {
+        "code": "000672.SZ",
+        "name": "000672.SZ"
+      },
+      {
+        "code": "000738.SZ",
+        "name": "000738.SZ"
+      },
+      {
+        "code": "000798.SZ",
+        "name": "000798.SZ"
+      },
+      {
+        "code": "000859.SZ",
+        "name": "000859.SZ"
+      },
+      {
+        "code": "000890.SZ",
+        "name": "000890.SZ"
+      },
+      {
+        "code": "000922.SZ",
+        "name": "000922.SZ"
+      },
+      {
+        "code": "000973.SZ",
+        "name": "000973.SZ"
+      },
+      {
+        "code": "000977.SZ",
+        "name": "000977.SZ"
+      },
+      {
+        "code": "600097.SH",
+        "name": "600097.SH"
+      },
+      {
+        "code": "600288.SH",
+        "name": "600288.SH"
+      },
+      {
+        "code": "600372.SH",
+        "name": "600372.SH"
+      },
+      {
+        "code": "600397.SH",
+        "name": "600397.SH"
+      },
+      {
+        "code": "600410.SH",
+        "name": "600410.SH"
+      },
+      {
+        "code": "600629.SH",
+        "name": "600629.SH"
+      },
+      {
+        "code": "600671.SH",
+        "name": "600671.SH"
+      },
+      {
+        "code": "600673.SH",
+        "name": "600673.SH"
+      },
+      {
+        "code": "600725.SH",
+        "name": "600725.SH"
+      },
+      {
+        "code": "600791.SH",
+        "name": "600791.SH"
+      }
+    ],
+    "meta": {
+      "source": "auto_trainer",
+      "strategy": "tail_strength",
+      "pool": "watchlist",
+      "top_k": 60,
+      "updated_at": "2026-02-16T22:53:34"
+    }
+  },
+  "auto_tail_strength": {
+    "updated_at": "2026-02-17T12:19:31",
+    "codes": [
+      {
+        "code": "000922.SZ",
+        "name": "000922.SZ"
+      },
+      {
+        "code": "600629.SH",
+        "name": "600629.SH"
+      },
+      {
+        "code": "000559.SZ",
+        "name": "000559.SZ"
+      },
+      {
+        "code": "000002.SZ",
+        "name": "000002.SZ"
+      },
+      {
+        "code": "000007.SZ",
+        "name": "000007.SZ"
+      },
+      {
+        "code": "000672.SZ",
+        "name": "000672.SZ"
+      },
+      {
+        "code": "000738.SZ",
+        "name": "000738.SZ"
+      },
+      {
+        "code": "000798.SZ",
+        "name": "000798.SZ"
+      },
+      {
+        "code": "000859.SZ",
+        "name": "000859.SZ"
+      },
+      {
+        "code": "000890.SZ",
+        "name": "000890.SZ"
+      },
+      {
+        "code": "000973.SZ",
+        "name": "000973.SZ"
+      },
+      {
+        "code": "000977.SZ",
+        "name": "000977.SZ"
+      },
+      {
+        "code": "600097.SH",
+        "name": "600097.SH"
+      },
+      {
+        "code": "600288.SH",
+        "name": "600288.SH"
+      },
+      {
+        "code": "600372.SH",
+        "name": "600372.SH"
+      },
+      {
+        "code": "600397.SH",
+        "name": "600397.SH"
+      },
+      {
+        "code": "600410.SH",
+        "name": "600410.SH"
+      },
+      {
+        "code": "600671.SH",
+        "name": "600671.SH"
+      },
+      {
+        "code": "600673.SH",
+        "name": "600673.SH"
+      },
+      {
+        "code": "600725.SH",
+        "name": "600725.SH"
+      },
+      {
+        "code": "600791.SH",
+        "name": "600791.SH"
+      }
+    ],
+    "meta": {
+      "source": "auto_trainer",
+      "strategy": "tail_strength",
+      "pool": "watchlist",
+      "top_k": 60,
+      "updated_at": "2026-02-17T12:19:31"
+    }
+  },
+  "hot_money": {
+    "updated_at": "2026-02-16T22:53:34",
+    "codes": [
+      {
+        "code": "000559.SZ",
+        "name": "000559.SZ"
+      },
+      {
+        "code": "000738.SZ",
+        "name": "000738.SZ"
+      },
+      {
+        "code": "000798.SZ",
+        "name": "000798.SZ"
+      },
+      {
+        "code": "000859.SZ",
+        "name": "000859.SZ"
+      },
+      {
+        "code": "600397.SH",
+        "name": "600397.SH"
+      },
+      {
+        "code": "600410.SH",
+        "name": "600410.SH"
+      },
+      {
+        "code": "600673.SH",
+        "name": "600673.SH"
+      },
+      {
+        "code": "600791.SH",
+        "name": "600791.SH"
+      }
+    ],
+    "meta": {
+      "source": "auto_trainer",
+      "strategy": "hot_money",
+      "pool": "watchlist",
+      "top_k": 60,
+      "updated_at": "2026-02-16T22:53:34"
+    }
+  },
+  "auto_hot_money": {
+    "updated_at": "2026-02-16T22:53:34",
+    "codes": [
+      {
+        "code": "000559.SZ",
+        "name": "000559.SZ"
+      },
+      {
+        "code": "000738.SZ",
+        "name": "000738.SZ"
+      },
+      {
+        "code": "000798.SZ",
+        "name": "000798.SZ"
+      },
+      {
+        "code": "000859.SZ",
+        "name": "000859.SZ"
+      },
+      {
+        "code": "600397.SH",
+        "name": "600397.SH"
+      },
+      {
+        "code": "600410.SH",
+        "name": "600410.SH"
+      },
+      {
+        "code": "600673.SH",
+        "name": "600673.SH"
+      },
+      {
+        "code": "600791.SH",
+        "name": "600791.SH"
+      }
+    ],
+    "meta": {
+      "source": "auto_trainer",
+      "strategy": "hot_money",
+      "pool": "watchlist",
+      "top_k": 60,
+      "updated_at": "2026-02-16T22:53:34"
+    }
+  },
+  "demo_macd": {
+    "updated_at": "2026-02-17T12:19:31",
+    "codes": [
+      {
+        "code": "000158.SZ",
+        "name": "000158.SZ"
+      },
+      {
+        "code": "000922.SZ",
+        "name": "000922.SZ"
+      },
+      {
+        "code": "600629.SH",
+        "name": "600629.SH"
+      }
+    ],
+    "meta": {
+      "source": "auto_trainer",
+      "strategy": "demo_macd",
+      "pool": "watchlist",
+      "top_k": 60,
+      "updated_at": "2026-02-17T12:19:31"
+    }
+  },
+  "auto_demo_macd": {
+    "updated_at": "2026-02-17T12:19:31",
+    "codes": [
+      {
+        "code": "000158.SZ",
+        "name": "000158.SZ"
+      },
+      {
+        "code": "000922.SZ",
+        "name": "000922.SZ"
+      },
+      {
+        "code": "600629.SH",
+        "name": "600629.SH"
+      }
+    ],
+    "meta": {
+      "source": "auto_trainer",
+      "strategy": "demo_macd",
+      "pool": "watchlist",
+      "top_k": 60,
+      "updated_at": "2026-02-17T12:19:31"
+    }
+  }
+}

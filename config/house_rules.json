@@ -1,0 +1,17 @@
+{
+  "general": "1. 严禁追高，宁可错过不做错。\n2. 单只股票仓位不得超过 30%。\n3. 必须顺势而为。\n4. “买在无人问津”属于情绪信号，必须经过阶段过滤：仅在 Phase 1 或 Phase 2 初期允许试探；Phase 4 一律不买。\n5. 无人问津的试探条件：满足以下任意 3 项才允许小仓位试探（5%-10%）并设严格止损：\n- 长周期均线走平或下行斜率明显减缓\n- ATR/波动率收缩\n- 缩量后出现放量止跌\n- 价格不再创新低而情绪更差（底背离/量价背离）\n- 大盘或板块出现企稳信号。\n6. 若仍处于 Phase 4，则只进入观察清单，等待阶段切换再评估。",
+  "blue": "负责进攻，寻找高胜率机会，信奉趋势和热点。",
+  "red": "负责风控，极度厌恶亏损，只关注风险、背离和压力位。",
+  "green": "负责统筹，平衡红蓝观点，结合用户实盘仓位给出最终裁决。",
+  "constraints": {
+    "max_single_position": 0.3,
+    "max_industry_concentration": 0.35,
+    "max_drawdown": 0.2,
+    "max_daily_trades": 6,
+    "stop_loss_pct": 0.06,
+    "take_profit_pct": 0.15,
+    "allow_chase": false,
+    "max_open_positions": 6,
+    "daily_loss_pct": 0.03
+  }
+}

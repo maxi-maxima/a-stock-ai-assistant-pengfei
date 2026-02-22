@@ -1,0 +1,7 @@
+{
+  "commission": 0.0003,
+  "slippage": 0.0005,
+  "stamp_duty": 0.001,
+  "min_commission": 5.0,
+  "lot_size": 100
+}

@@ -1,0 +1,40 @@
+{
+  "updated_at": "2026-02-17T12:19:09",
+  "source": "training",
+  "pool": "watchlist",
+  "mode": "walk_forward",
+  "days": 1000,
+  "min_samples": 5,
+  "min_avg_score": 0.0,
+  "top_k": 4,
+  "strategies": [
+    {
+      "name": "demo_macd",
+      "avg_score": 2.593003212018707,
+      "avg_return": 10.463359079527796,
+      "avg_drawdown": 0.0787035586750909,
+      "samples": 36
+    },
+    {
+      "name": "oversold",
+      "avg_score": 2.02043868272772,
+      "avg_return": 9.2889294944852,
+      "avg_drawdown": 0.07268490811757482,
+      "samples": 36
+    },
+    {
+      "name": "tail_strength",
+      "avg_score": 1.5631975307878523,
+      "avg_return": 8.194041177500019,
+      "avg_drawdown": 0.06630843646712169,
+      "samples": 36
+    },
+    {
+      "name": "Standard",
+      "avg_score": 0.0,
+      "avg_return": 0.0,
+      "avg_drawdown": 0.0,
+      "samples": 36
+    }
+  ]
+}

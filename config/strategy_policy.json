@@ -1,0 +1,7 @@
+{
+  "min_reward_count": 5,
+  "min_calls": 5,
+  "min_mean_reward": -0.02,
+  "disable_below": -0.08,
+  "penalty_weight": 0.3
+}

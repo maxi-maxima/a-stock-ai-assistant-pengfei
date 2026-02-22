@@ -1,0 +1,57 @@
+{
+  "skill_trend_system": {
+    "min_bars": 260,
+    "ema_short": 5,
+    "ema_mid": 20,
+    "ema_long1": 60,
+    "ema_long2": 120,
+    "ema_long3": 250,
+    "ema_mid_slope_lookback": 3,
+    "macd_fast": 8,
+    "macd_slow": 17,
+    "macd_signal": 9,
+    "boll_period": 10,
+    "divergence_lookback": 20
+  },
+  "skill_oscillator_combo": {
+    "min_bars": 30,
+    "rsi_period": 14,
+    "rsi_oversold": 30,
+    "kdj_period": 9,
+    "kdj_com": 2,
+    "kdj_divergence_lookback": 20,
+    "require_price_up": true
+  },
+  "skill_volume_confirm": {
+    "min_bars": 30,
+    "breakout_lookback": 20,
+    "breakout_pct": 0.0,
+    "vol_ma": 5,
+    "vol_mult": 1.5,
+    "require_close_up": true
+  },
+  "skill_pattern_breakout": {
+    "min_bars": 40,
+    "range_lookback": 25,
+    "min_width": 0.08,
+    "breakout_pct": 0.03,
+    "vol_ma": 5,
+    "vol_mult": 1.3
+  },
+  "skill_multi_timeframe_proxy": {
+    "min_bars": 260,
+    "ma_short": 5,
+    "ma_mid": 20,
+    "ma_long1": 120,
+    "ma_long2": 250,
+    "ma_mid_slope_lookback": 3,
+    "require_price_above_long": true
+  },
+  "skill_risk_guard": {
+    "min_bars": 40,
+    "atr_period": 14,
+    "atr_max_pct": 0.05,
+    "vol_ma": 20,
+    "vol_min_ratio": 0.8
+  }
+}
