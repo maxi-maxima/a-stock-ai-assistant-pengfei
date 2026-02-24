@@ -3,12 +3,10 @@ import os
 import sys
 
 from core.bootstrap import init_runtime
-from core.license import guard_streamlit
 
 init_runtime()
 
 st.set_page_config(page_title="AI 交易分身", page_icon="🧠", layout="wide")
-guard_streamlit()
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path: sys.path.append(current_dir)
 

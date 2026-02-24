@@ -38,6 +38,7 @@ ENV/
 .env
 config/secure_config.yaml
 data/secure_settings.json
+data/system_auth.json
 
 # Logs and Data
 *.log
@@ -47,6 +48,8 @@ data/event_bus.jsonl
 data/experience_log.jsonl
 data/learning_log.jsonl
 data/*.db
+data/cache/
+data/chroma_db/
 
 # Cache
 .cache/
