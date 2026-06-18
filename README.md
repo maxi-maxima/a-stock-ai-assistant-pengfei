@@ -36,8 +36,8 @@
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/yourusername/ai-trading-avatar.git
-cd ai-trading-avatar
+git clone https://github.com/maxi-maxima/a-stock-ai-assistant-pengfei.git
+cd a-stock-ai-assistant-pengfei
 
 # 2. 创建虚拟环境（推荐）
 python -m venv .venv
@@ -74,7 +74,7 @@ TUSHARE_TOKEN=your_tushare_token
 ## 📁 项目结构
 
 ```
-ai-trading-avatar/
+a-stock-ai-assistant-pengfei/
 ├── core/                   # 核心框架
 │   ├── tri_brain.py       # 三脑决策核心
 │   ├── cognitive_graph.py # 认知图谱(LangGraph)
@@ -185,9 +185,8 @@ ai-trading-avatar/
 
 ## 📞 联系方式
 
-- 项目主页: https://github.com/yourusername/ai-trading-avatar
-- 问题反馈: [GitHub Issues](https://github.com/yourusername/ai-trading-avatar/issues)
-- 邮箱: your.email@example.com
+- 项目主页: https://github.com/maxi-maxima/a-stock-ai-assistant-pengfei
+- 问题反馈: [GitHub Issues](https://github.com/maxi-maxima/a-stock-ai-assistant-pengfei/issues)
 
 ---
 
