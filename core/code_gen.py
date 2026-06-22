@@ -8,7 +8,7 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 from openai import OpenAI
-
+from core.llm_resolver import resolve_preferred_settings
 
 def _safe_import(name, globals=None, locals=None, fromlist=(), level=0):
     allowed = {"pandas", "numpy", "math"}
@@ -77,21 +77,28 @@ class StrategyGenerator:
         self._load_config()
 
     def _load_config(self):
+        self.config = {}
+        self.client = None
+        self.model = None
         try:
             with open("config/llm_config.yaml", "r", encoding="utf-8") as f:
-                self.config = yaml.safe_load(f)
-                # 优先使用 blue_brain (通常配置为最聪明的模型)
-                if 'blue_brain' in self.config:
-                    api_key = os.getenv("BLUE_BRAIN_API_KEY") or os.getenv("LLM_API_KEY") or self.config['blue_brain'].get('api_key')
-                    base_url = os.getenv("BLUE_BRAIN_BASE_URL") or os.getenv("LLM_BASE_URL") or self.config['blue_brain'].get('base_url')
-                    self.client = OpenAI(api_key=api_key, base_url=base_url)
-                    self.model = os.getenv("BLUE_BRAIN_MODEL") or os.getenv("LLM_MODEL") or self.config['blue_brain'].get('model')
-                else:
-                    api_key = os.getenv("LLM_API_KEY") or self.config['llm'].get('api_key')
-                    base_url = os.getenv("LLM_BASE_URL") or self.config['llm'].get('base_url')
-                    self.client = OpenAI(api_key=api_key, base_url=base_url)
-                    self.model = os.getenv("LLM_MODEL") or self.config['llm'].get('model')
-        except: self.client = None
+                self.config = yaml.safe_load(f) or {}
+        except Exception:
+            self.config = {}
+        try:
+            setting = resolve_preferred_settings(
+                preferred=("blue", "general"),
+                conf=self.config,
+                load_environment=True,
+            )
+            api_key = setting.get("api_key")
+            model = setting.get("model")
+            if not api_key or not model:
+                return
+            self.client = OpenAI(api_key=api_key, base_url=setting.get("base_url") or None)
+            self.model = model
+        except Exception:
+            self.client = None
 
     def _build_sample_df(self, rows=120):
         try:

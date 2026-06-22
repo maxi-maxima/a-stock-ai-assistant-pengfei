@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 import pandas as pd
 import datetime
 import os
@@ -6,6 +6,7 @@ import json
 
 from core.learning_log import get_last_feature_weights
 from core.stock_name import display_name
+from core.strategy_display import display_strategy_name
 from core.watchlist import load_entries, append_entries
 from core.financial_analysis import extract_metrics, score_financial
 from core.threshold_profiles import (
@@ -1025,7 +1026,7 @@ def render(scanner, real_portfolio):
                 idx = st.selectbox("选择记录", list(range(len(history))), format_func=lambda i: labels[i])
                 run = history[idx] if idx is not None else {}
                 if run:
-                    st.caption(f"时间: {run.get('time', '')} | 范围: {run.get('scope', '')} | 策略: {run.get('strategy', '')}")
+                    st.caption(f"时间: {run.get('time', '')} | 范围: {run.get('scope', '')} | 策略: {display_strategy_name(run.get('strategy', ''))}")
                     if run.get("pool_key"):
                         st.caption(f"策略池: {run.get('pool_key')}")
                     st.metric("命中数量", run.get("count", 0))

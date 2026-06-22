@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "base_url": "https://api.letta.com",
+  "project_id": "",
+  "agent_id": "agent-46df5014-0cbf-4f60-975b-f524ac158fbc",
+  "agent_name": "kimi_stock_semantic",
+  "model": "openai/gpt-4o-mini",
+  "embedding": "openai/text-embedding-3-small",
+  "semantic_block_label": "semantic",
+  "max_chars": 6000,
+  "max_read_chars": 1200,
+  "append_mode": "prepend",
+  "shadow_mode": "read"
+}

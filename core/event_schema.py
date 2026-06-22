@@ -36,10 +36,16 @@ def normalize_event(event_type, payload=None, code=None, decision_id=None, sourc
     if "suggested_action" in payload:
         payload["suggested_action"] = _upper_action(payload.get("suggested_action"))
 
+    # enforce decision id for decision/execution/outcome chain
+    if event_type == "decision" and not decision_id and not payload.get("decision_id"):
+        decision_id = _new_id()
+
     # link outcome/execution to decision if missing
     if event_type in ("execution", "outcome"):
         if not payload.get("origin_decision_id") and decision_id:
             payload["origin_decision_id"] = decision_id
+        if not decision_id:
+            decision_id = payload.get("decision_id") or payload.get("origin_decision_id")
 
     record = {
         "event_id": _new_id(),
@@ -70,6 +76,8 @@ def validate_event(record):
 
     # required by type
     if event_type == "decision":
+        if not (record.get("decision_id") or payload.get("decision_id")):
+            errors.append("decision_missing_decision_id")
         if not payload.get("action"):
             errors.append("decision_missing_action")
         if payload.get("suggested_action") is None and payload.get("action"):
@@ -93,6 +101,14 @@ def validate_event(record):
             errors.append("agent_missing_agent_id")
         if not payload.get("status"):
             errors.append("agent_missing_status")
+    elif event_type == "tool_call":
+        if not payload.get("tool"):
+            errors.append("tool_call_missing_tool")
+    elif event_type == "tool_result":
+        if not payload.get("tool"):
+            errors.append("tool_result_missing_tool")
+        if payload.get("ok") is None:
+            errors.append("tool_result_missing_ok")
 
     # ensure action upper
     if "action" in payload:

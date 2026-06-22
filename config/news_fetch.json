@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "mode": "composio",
+  "tool": "COMPOSIO_SEARCH_NEWS",
+  "toolkit_slug": "composio_search",
+  "toolkit_version": "20260217_00",
+  "toolkit_versions": {},
+  "user_id": "default",
+  "query_template": "{name} {code} A股 新闻",
+  "query_key": "query",
+  "limit_key": "",
+  "limit": 5,
+  "min_items": 0,
+  "max_items": 6,
+  "merge": "prepend",
+  "arguments": {
+    "gl": "cn",
+    "hl": "zh-cn",
+    "when": "d"
+  }
+}

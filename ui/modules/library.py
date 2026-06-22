@@ -133,7 +133,7 @@ def render(kb):
             if getattr(kb, "_last_llm_ok", False):
                 st.caption("已使用 Kimi 整理。")
             elif getattr(kb, "_last_llm_used", False):
-                st.warning("Kimi 整理失败，已回退规则解析。请检查密钥或文本长度。")
+                st.warning("Kimi 模型整理失败，已回退规则解析。请检查密钥或文本长度。")
 
         if c2.button("导入知识库"):
             try:

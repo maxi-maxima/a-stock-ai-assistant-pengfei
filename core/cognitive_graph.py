@@ -20,8 +20,14 @@ from core.experience_store import ExperienceStore
 from core.threshold_profiles import load_profiles, get_active_profile_name, get_profile
 from core.experience_feedback import load_bias
 from core.learning_log import record_feature_weights, log_event
+from core.logger import warn
 from core.ta_utils import resolve_ma_periods, ma_series
 from core.event_bus import EventBus
+from core.browser_use_adapter import register_browser_use_tool
+from core.letta_adapter import read_semantic, write_semantic_from_state
+from core.protocols import get_protocol_version, sanitize_tool_tasks, validate_decision_payload
+from core.news_fetch import build_news_tool_tasks, should_fetch, extract_news_items, merge_news
+from core.decision_sample import build_decision_sample, ensure_decision_sample
 
 # 初始化全局单例
 council = TriBrainCouncil()
@@ -37,9 +43,15 @@ class CognitiveState(TypedDict):
     fundamental_data: Dict[str, Any]
     news_data: List[str]
     macro_news: List[str]
+    global_index: Dict[str, Any]
     capital_data: Dict[str, Any] 
     chip_data: Dict[str, Any]
     tech_factors: Dict[str, Any]
+    dealer_hunter: Dict[str, Any]
+    chip_analyst: Dict[str, Any]
+    cycle_compass: Dict[str, Any]
+    liquidity_guard: Dict[str, Any]
+    sentiment_weather: Dict[str, Any]
     
     user_position: Dict[str, Any]
     user_funds: Dict[str, Any]
@@ -53,12 +65,25 @@ class CognitiveState(TypedDict):
     capital_analysis: str
     memory_context: str
     knowledge_context: str
+    knowledge_titles: List[str]
+    knowledge_items: List[Dict[str, Any]]
     
     # 🔥 Python 算好的硬数据
     calculated_grid: Dict[str, Any]
+    reference_pack: Dict[str, Any]
+    feature_pack: Dict[str, Any]
+    macro_pack: Dict[str, Any]
+    factor_snapshot: Dict[str, Any]
+    tool_tasks: List[Dict[str, Any]]
+    composio_tasks: List[Dict[str, Any]]
+    tool_results: List[Dict[str, Any]]
+    autogen_review: str
+    letta_context: str
     
     trading_signal: Dict[str, Any]
     risk_assessment: str
+    stop_policy: str
+    risk_budget: Dict[str, Any]
     execution_result: str
     deep_risk: bool
     skill_plan: Dict[str, Any]
@@ -178,6 +203,8 @@ def perception_node(state: CognitiveState):
     tech_summary = "n/a"
     ma20 = 0
     last_date = None
+    pct_chg = 0.0
+    vol = 0.0
     data_quality = {"rows": int(len(hist)) if hist is not None else 0}
     if not hist.empty:
         latest = hist.iloc[-1]
@@ -351,6 +378,19 @@ def planner_node(state: CognitiveState):
     plan = out.get("skill_plan", {}) if isinstance(out.get("skill_plan", {}), dict) else {}
     plan["planner"] = "heuristic_v1"
     out["skill_plan"] = plan
+    # auto build tool tasks (e.g., news fetch)
+    tool_tasks = []
+    existing = state.get("tool_tasks")
+    if isinstance(existing, list):
+        tool_tasks.extend(existing)
+    try:
+        if should_fetch(state):
+            tool_tasks.extend(build_news_tool_tasks(state))
+    except Exception:
+        pass
+    if tool_tasks:
+        valid_tasks, _ = sanitize_tool_tasks(tool_tasks)
+        out["tool_tasks"] = valid_tasks
     return out
 
 def executor_node(state: CognitiveState):
@@ -373,7 +413,7 @@ def critic_node(state: CognitiveState):
             if rs >= 60:
                 score += 30
                 flags.append("dealer_high_risk")
-            elif rs >= 30:
+            elif rs >= 25:
                 score += 15
                 flags.append("dealer_mid_risk")
         except Exception:
@@ -385,12 +425,14 @@ def critic_node(state: CognitiveState):
         flags.append("liquidity_zombie")
 
     nv = state.get("news_check")
+    news_neg = False
     if isinstance(nv, dict):
         try:
             ds = float(nv.get("divergence_score", 0) or 0)
             if ds < 0:
-                score += 10
+                score += 20
                 flags.append("news_divergence_negative")
+                news_neg = True
         except Exception:
             pass
 
@@ -399,24 +441,48 @@ def critic_node(state: CognitiveState):
         try:
             imp = float(cc.get("score_impact", 0) or 0)
             if imp <= -50:
-                score += 30
+                score += 50
                 flags.append("cycle_phase4")
             elif imp <= -10:
-                score += 10
+                score += 20
                 flags.append("cycle_weak")
         except Exception:
             pass
 
     sw = state.get("sentiment_weather")
+    sentiment_cold = False
     if isinstance(sw, dict):
         weather = str(sw.get("weather", ""))
-        if ("冰" in weather) or ("冷" in weather):
-            score += 10
+        try:
+            temp = float(sw.get("temperature", 0) or 0)
+        except Exception:
+            temp = 0.0
+        cold_markers = ["\u51b7", "\u5bd2", "\u51b0", "\u96ea"]
+        is_cold = temp <= 30 or any(marker in weather for marker in cold_markers)
+        if is_cold:
+            score += 15
             flags.append("sentiment_cold")
+            sentiment_cold = True
+
+    # liquidity mid-risk: weak turnover but not zombie
+    if isinstance(lg, dict) and not lg.get("is_zombie"):
+        try:
+            amount_w = float(lg.get("amount_w", 0) or 0)
+            if amount_w > 0 and amount_w < 8000:
+                score += 10
+                flags.append("liquidity_weak")
+        except Exception:
+            pass
+
+    # combo bonus: news divergence + sentiment cold
+    if news_neg and sentiment_cold:
+        score += 5
+        flags.append("news_sentiment_combo")
+
 
     if score >= 50:
         level = "high"
-    elif score >= 20:
+    elif score >= 15:
         level = "medium"
     else:
         level = "low"
@@ -512,6 +578,199 @@ def _build_context_tags(state: CognitiveState):
         tags.append(f"profile_{prof}")
 
     return tags
+
+def _clip_text(val, limit=600):
+    if val is None:
+        return ""
+    try:
+        text = str(val).strip()
+    except Exception:
+        return ""
+    if not text:
+        return ""
+    if len(text) <= limit:
+        return text
+    return text[:limit] + "..."
+
+def _to_text(val, limit=600):
+    if isinstance(val, (dict, list)):
+        try:
+            return _clip_text(json.dumps(val, ensure_ascii=False), limit=limit)
+        except Exception:
+            return _clip_text(val, limit=limit)
+    return _clip_text(val, limit=limit)
+
+def tool_bridge_node(state: CognitiveState):
+    tasks = state.get("tool_tasks") or state.get("composio_tasks")
+    if not isinstance(tasks, list) or not tasks:
+        return {}
+    tasks, _ = sanitize_tool_tasks(tasks)
+
+    from core.capability_registry import get_capability
+    from core.tool_registry import call_tool, get_registry
+
+    needs_composio = False
+    needs_browser_use = False
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+        tool_name = str(task.get("tool") or task.get("tool_name") or "").strip()
+        kind = str(task.get("kind") or task.get("type") or "").strip().lower()
+        if tool_name.startswith("composio_") or kind == "composio":
+            needs_composio = True
+            break
+        if tool_name.startswith("browser_use") or kind == "browser_use":
+            needs_browser_use = True
+
+    if needs_composio:
+        cap = get_capability("tools", "composio")
+        if not isinstance(cap, dict) or not cap.get("enabled"):
+            return {"tool_results": [{"tool": "composio", "ok": False, "error": "capability_disabled"}]}
+        reg = get_registry()
+        if not reg.has_tool("composio_execute"):
+            try:
+                from core.composio_adapter import register_composio_tools
+                register_composio_tools(reg)
+            except Exception:
+                pass
+    if needs_browser_use:
+        cap = get_capability("tools", "browser_use")
+        if not isinstance(cap, dict) or not cap.get("enabled"):
+            return {"tool_results": [{"tool": "browser_use", "ok": False, "error": "capability_disabled"}]}
+        reg = get_registry()
+        if not reg.has_tool("browser_use_run"):
+            try:
+                register_browser_use_tool(reg)
+            except Exception:
+                pass
+
+    results = []
+    merged_news = state.get("news_data") if isinstance(state.get("news_data"), list) else []
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+        tool_name = str(task.get("tool") or task.get("tool_name") or "").strip()
+        args = task.get("args")
+        result = None
+        if tool_name:
+            result = call_tool(tool_name, args=args, caller="tool_bridge")
+        else:
+            kind = str(task.get("kind") or task.get("type") or "").strip().lower()
+            if kind == "composio":
+                action = str(task.get("action") or "").strip().lower()
+                if action in ("list", "get", "discover"):
+                    args = {
+                        "toolkits": task.get("toolkits"),
+                        "tools": task.get("tools"),
+                        "search": task.get("search"),
+                        "limit": task.get("limit"),
+                        "user_id": task.get("user_id")
+                    }
+                    result = call_tool("composio_list_tools", args=args, caller="tool_bridge")
+                else:
+                    args = {
+                        "tool": task.get("name") or task.get("composio_tool") or task.get("tool_name"),
+                        "arguments": task.get("arguments") or task.get("params") or task.get("args") or {},
+                        "user_id": task.get("user_id")
+                    }
+                    result = call_tool("composio_execute", args=args, caller="tool_bridge")
+            elif kind == "browser_use":
+                args = {
+                    "task": task.get("task") or task.get("prompt") or task.get("query"),
+                    "max_steps": task.get("max_steps"),
+                    "headless": task.get("headless", True),
+                    "use_cloud": task.get("use_cloud", False)
+                }
+                result = call_tool("browser_use_run", args=args, caller="tool_bridge")
+        if isinstance(result, dict):
+            results.append({
+                "tool": result.get("tool"),
+                "ok": result.get("ok"),
+                "error": result.get("error"),
+                "data": result.get("data")
+            })
+            if task.get("map_to") == "news_data" and result.get("ok"):
+                max_items = task.get("max_items")
+                try:
+                    items = extract_news_items(result.get("data"), max_items=max_items)
+                except Exception:
+                    items = []
+                if items:
+                    merged_news = merge_news(
+                        merged_news,
+                        items,
+                        mode=task.get("merge") or "prepend",
+                        max_items=max_items
+                    )
+
+    if not results:
+        return {}
+    out = {"tool_results": results}
+    if merged_news:
+        out["news_data"] = merged_news
+    return out
+
+def autogen_review_node(state: CognitiveState):
+    from core.capability_registry import get_capability
+    cap = get_capability("orchestrators", "autogen")
+    if not isinstance(cap, dict) or not cap.get("enabled"):
+        return {}
+
+    from core.tool_registry import call_tool, get_registry
+    reg = get_registry()
+    if not reg.has_tool("autogen_run"):
+        try:
+            from core.autogen_orchestrator import register_autogen_tool
+            register_autogen_tool(reg)
+        except Exception:
+            pass
+
+    code = str(state.get("stock_code") or "").strip()
+    prompt = "\n".join([
+        "你是独立复核员，请基于以下信息给出简短复核：",
+        f"标的: {code}",
+        f"技术: {_to_text(state.get('technical_analysis'), limit=400)}",
+        f"资金: {_to_text(state.get('capital_analysis'), limit=200)}",
+        f"筹码: {_to_text(state.get('chip_data'), limit=200)}",
+        f"新闻: {_to_text(state.get('news_analysis'), limit=300)}",
+        f"记忆: {_to_text(state.get('memory_context'), limit=300)}",
+        f"知识: {_to_text(state.get('knowledge_context'), limit=300)}",
+        f"critic: {_to_text(state.get('critic_report'), limit=200)}",
+        "输出要求: 1句结论 + 3条风险点 + 1条动作建议(BUY/SELL/HOLD/KEEP)。"
+    ]).strip()
+    if not prompt:
+        return {}
+    result = call_tool(
+        "autogen_run",
+        args={
+            "prompt": prompt,
+            "system_prompt": "你是冷静的复核审计员，输出务必简洁、明确。",
+            "max_turns": 1,
+            "temperature": 0.2
+        },
+        caller="autogen_review"
+    )
+    if not isinstance(result, dict) or not result.get("ok"):
+        return {}
+    data = result.get("data", {}) if isinstance(result.get("data"), dict) else {}
+    output = data.get("output") or data.get("result") or ""
+    output = _clip_text(output, limit=800)
+    if not output:
+        return {}
+    return {"autogen_review": output}
+
+def letta_memory_node(state: CognitiveState):
+    from core.capability_registry import get_capability
+    cap = get_capability("memory", "letta")
+    if not isinstance(cap, dict) or not cap.get("enabled"):
+        return {}
+    try:
+        hint = read_semantic()
+    except Exception:
+        hint = ""
+    if not hint:
+        return {}
+    return {"letta_context": hint}
 
 def _extract_strategy_info(signal_source):
     info = {"strategy": "", "strategies": [], "strategy_votes": [], "strategy_weight": None}
@@ -805,7 +1064,10 @@ def decision_node(state: CognitiveState):
         "knowledge_base": state.get('knowledge_context'),
         "knowledge_titles": _trim_list(state.get('knowledge_titles', []), n=5),
         "knowledge_items": _trim_list(state.get('knowledge_items', []), n=3),
-        "critic_report": state.get("critic_report", {})
+        "critic_report": state.get("critic_report", {}),
+        "tool_results": _trim_list(state.get("tool_results", []), n=3),
+        "agent_review": state.get("autogen_review"),
+        "semantic_hint": state.get("letta_context")
     }
     rules = memory.get_rules()
     debate = council.debate(context, custom_rules=rules, mode="stock")
@@ -1011,6 +1273,16 @@ def decision_node(state: CognitiveState):
     if policy_notes:
         debate["policy_notes"] = policy_notes
 
+    decision_sample = build_decision_sample(
+        debate=debate,
+        action=action,
+        suggested_action=suggested_action,
+        signal_source=state.get("signal_source"),
+        context_tags=context_tags,
+        policy_notes=policy_notes,
+    )
+    debate["decision_sample"] = decision_sample
+
     # Experience logging
     decision_id = None
     try:
@@ -1027,7 +1299,8 @@ def decision_node(state: CognitiveState):
             "data_quality": state.get("data_quality"),
             "market_data": state.get("market_data", {}),
             "factor_snapshot": state.get("factor_snapshot", {}),
-            "policy_notes": policy_notes
+            "policy_notes": policy_notes,
+            "decision_sample": decision_sample
         })
     except Exception:
         decision_id = None
@@ -1039,25 +1312,33 @@ def decision_node(state: CognitiveState):
         debate["decision_id"] = decision_id
     # Unified event bus
     try:
+        proto_version = get_protocol_version()
+        decision_payload = {
+            "action": action,
+            "suggested_action": suggested_action,
+            "scores": debate.get("scores", {}),
+            "feature_weights": debate.get("feature_weights", {}),
+            "factor_usage": debate.get("factor_usage", {}),
+            "scores_missing": debate.get("scores_missing", []),
+            "risk": debate.get("risk", {}),
+            "context_tags": context_tags,
+            "knowledge_titles": state.get("knowledge_titles", []),
+            "profile": state.get("profile_name"),
+            "signal_source": state.get("signal_source"),
+            "data_quality": state.get("data_quality"),
+            "market_data": state.get("market_data", {}),
+            "factor_snapshot": state.get("factor_snapshot", {}),
+            "policy_notes": policy_notes,
+            "decision_sample": decision_sample,
+            "protocol_version": proto_version
+        }
+        decision_payload = ensure_decision_sample(decision_payload, fallback_sample=decision_sample)
+        ok, errs = validate_decision_payload(decision_payload)
+        if not ok:
+            warn("protocol.decision_payload_invalid", {"errors": errs})
         event_bus.log(
             "decision",
-            payload={
-                "action": action,
-                "suggested_action": suggested_action,
-                "scores": debate.get("scores", {}),
-                "feature_weights": debate.get("feature_weights", {}),
-                "factor_usage": debate.get("factor_usage", {}),
-                "scores_missing": debate.get("scores_missing", []),
-                "risk": debate.get("risk", {}),
-                "context_tags": context_tags,
-                "knowledge_titles": state.get("knowledge_titles", []),
-                "profile": state.get("profile_name"),
-                "signal_source": state.get("signal_source"),
-                "data_quality": state.get("data_quality"),
-                "market_data": state.get("market_data", {}),
-                "factor_snapshot": state.get("factor_snapshot", {}),
-                "policy_notes": policy_notes
-            },
+            payload=decision_payload,
             code=state.get("stock_code"),
             decision_id=decision_id,
             source="cognitive_graph"
@@ -1113,6 +1394,14 @@ def decision_node(state: CognitiveState):
                     "policy_notes": policy_notes
                 },
                 manual_teach=False
+            )
+        except Exception:
+            pass
+        try:
+            # semantic memory writeback (L2)
+            write_semantic_from_state(
+                {**state, "context_tags": context_tags},
+                debate=debate
             )
         except Exception:
             pass
@@ -1648,17 +1937,23 @@ def build_cognitive_graph():
         workflow.add_node("perception", perception_node)
         workflow.add_node("planner", planner_node)
         workflow.add_node("executor", executor_node)
+        workflow.add_node("tool_bridge", tool_bridge_node)
+        workflow.add_node("letta_memory", letta_memory_node)
         workflow.add_node("critic", critic_node)
         workflow.add_node("analysis", analysis_node)
+        workflow.add_node("autogen_review", autogen_review_node)
         workflow.add_node("decision", decision_node)
         workflow.add_node("risk_control", risk_node)
         workflow.add_node("execution", execution_node)
         workflow.set_entry_point("perception")
         workflow.add_edge("perception", "planner")
         workflow.add_edge("planner", "executor")
-        workflow.add_edge("executor", "critic")
+        workflow.add_edge("executor", "tool_bridge")
+        workflow.add_edge("tool_bridge", "letta_memory")
+        workflow.add_edge("letta_memory", "critic")
         workflow.add_edge("critic", "analysis")
-        workflow.add_edge("analysis", "decision")
+        workflow.add_edge("analysis", "autogen_review")
+        workflow.add_edge("autogen_review", "decision")
         workflow.add_edge("decision", "risk_control")
         workflow.add_edge("risk_control", "execution")
         workflow.add_edge("execution", END)
@@ -1668,13 +1963,16 @@ def build_cognitive_graph():
             "perception": perception_node,
             "planner": planner_node,
             "executor": executor_node,
+            "tool_bridge": tool_bridge_node,
+            "letta_memory": letta_memory_node,
             "critic": critic_node,
             "analysis": analysis_node,
+            "autogen_review": autogen_review_node,
             "decision": decision_node,
             "risk_control": risk_node,
             "execution": execution_node
         }
-        order = ["perception", "planner", "executor", "critic", "analysis", "decision", "risk_control", "execution"]
+        order = ["perception", "planner", "executor", "tool_bridge", "letta_memory", "critic", "analysis", "autogen_review", "decision", "risk_control", "execution"]
 
         class _SimpleGraph:
             def __init__(self, nodes_map, order_list):

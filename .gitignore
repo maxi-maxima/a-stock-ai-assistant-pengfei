@@ -47,14 +47,26 @@ data/llm_logs.jsonl
 data/event_bus.jsonl
 data/experience_log.jsonl
 data/learning_log.jsonl
+data/*.jsonl
+data/*latest*.json
+data/*report*.json
+data/*report*.jsonl
+data/*cache*.json
+data/*history*.json
 data/*.db
+data/*.sqlite
+data/*.sqlite3
 data/cache/
 data/chroma_db/
+data/reports/
+data/runtime/
+data/snapshots/
 
 # Cache
 .cache/
 .pytest_cache/
 .mypy_cache/
+__pycache__/
 *.tmp
 
 # Build artifacts

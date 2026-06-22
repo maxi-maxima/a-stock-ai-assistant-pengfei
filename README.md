@@ -4,6 +4,24 @@
 [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+## 最新版本：v1.1.0
+
+本次升级同步了 `C:\Users\1\Desktop\KIMIstock\gemini` 中的最新项目版本，并清理掉不应发布的本地密钥、缓存、日志和运行态数据。
+
+重点更新：
+- 新增 Blindbox 实验引擎、日报维护流程、调度器和 UI 模块。
+- 新增完整升级/回测流水线、升级调度器和命令行运行工具。
+- 新增 AutoGen/AG2、Composio、browser-use、Letta、Agent Lightning 能力适配与注册。
+- 增强循环健康度、执行覆盖率、策略展示和日常维护报告。
+- 新增测试套件，并移除旧的本地授权/机器码门控脚本。
+
+验证命令：
+
+```bash
+python -m unittest discover -s tests -v
+python -m compileall -q core modules skills ui tests tools dashboard.py doctor.py
+```
+
 > ⚠️ **免责声明**: 本系统仅供**教育和研究**目的，**不构成投资建议**。使用本系统进行交易的风险由用户自行承担。
 
 ---

@@ -16,8 +16,12 @@ class NewsVerifier:
         curr = df.iloc[-1]
         pct_3d = df['pct_chg'].tail(3).sum()
         trend = "上涨" if pct_3d > 2 else "下跌" if pct_3d < -2 else "震荡"
+        # 2. 计算成交量均值（修复 vol_ma 未定义）
+        periods = resolve_ma_periods()
+        p_short1 = periods.get('short1', 5)
+        vol_ma = ma_series(df['vol'], p_short1).iloc[-1]
 
-        # 2. 模拟消息面评分 (如果没有接入真实NLP，使用随机或规则)
+        # 3. 模拟消息面评分 (如果没有接入真实NLP，使用随机或规则)
         # 这里为了不报错，我们做一个基础逻辑：
         # 如果涨幅巨大但放巨量滞涨 -> 疑似利好出货
         

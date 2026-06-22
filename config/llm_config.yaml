@@ -12,7 +12,7 @@ green_brain:
   name: Kimi (Judge)
   base_url: https://api.moonshot.cn/v1
   api_key: ''
-  model: moonshot-v1-8k
+  model: kimi-k2.5
 system:
   tushare_token: ''
   max_retries: 3
@@ -26,3 +26,18 @@ system:
   embedding_skip_if_unreachable: true
   embedding_probe_timeout: 2
   chroma_offline: false
+
+debate:
+  enabled: true
+  rounds: 3
+  temperature: 0.2
+  role_rotation:
+    enabled: true
+    mode: by_symbol
+  multi_judge:
+    enabled: true
+    judges:
+    - green
+    - blue
+    - red
+    consensus: majority

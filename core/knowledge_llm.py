@@ -8,6 +8,7 @@ except Exception:
     OpenAI = None
 
 from core.llm_guard import parse_json_safe, log_llm
+from core.llm_resolver import resolve_brain_settings
 
 
 class KimiKnowledgeOrganizer:
@@ -42,26 +43,10 @@ class KimiKnowledgeOrganizer:
             return
         conf = self._load_config()
         secure = self._load_secure_settings()
-        green = conf.get("green_brain", {}) if isinstance(conf.get("green_brain", {}), dict) else {}
-
-        api_key = (
-            os.getenv("GREEN_BRAIN_API_KEY")
-            or os.getenv("LLM_API_KEY")
-            or secure.get("green_brain_api_key")
-            or secure.get("llm_api_key")
-            or green.get("api_key")
-        )
-        base_url = (
-            os.getenv("GREEN_BRAIN_BASE_URL")
-            or os.getenv("LLM_BASE_URL")
-            or green.get("base_url")
-        )
-        model = (
-            os.getenv("GREEN_BRAIN_MODEL")
-            or os.getenv("LLM_MODEL")
-            or green.get("model")
-            or "moonshot-v1-8k"
-        )
+        setting = resolve_brain_settings("green", secure=secure, conf=conf, load_environment=True)
+        api_key = setting.get("api_key")
+        base_url = setting.get("base_url")
+        model = setting.get("model") or "moonshot-v1-8k"
         if not api_key or not model:
             return
         try:
@@ -82,7 +67,7 @@ class KimiKnowledgeOrganizer:
                     {"role": "system", "content": "You are a health check bot. Reply with 'pong'."},
                     {"role": "user", "content": "ping"}
                 ],
-                temperature=0.0,
+                temperature=1,
                 max_tokens=8
             )
             raw = res.choices[0].message.content if res and res.choices else ""

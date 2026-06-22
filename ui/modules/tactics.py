@@ -3,6 +3,8 @@ import pandas as pd
 import datetime
 import os
 import json
+import html
+import re
 
 from core.learning_log import log_event
 from core.cognitive_graph import build_cognitive_graph
@@ -17,6 +19,7 @@ from skills.chip_analyst import ChipAnalyst
 from skills.sentiment_engine import SentimentEngine
 from skills.cycle_compass import CycleCompass
 from core.stock_name import display_name
+from core.strategy_display import display_strategy_name
 from core.financial_analysis import extract_metrics, score_financial
 from core.threshold_profiles import (
     load_profiles,
@@ -273,7 +276,7 @@ def _render_skill_summaries(kb):
     summaries = _get_skill_summaries(kb)
     if not summaries:
         return
-    with st.expander("🧭 技能速览", expanded=False):
+    with st.expander("技能速览", expanded=False):
         for item in summaries:
             title = item.get("title", "无标题")
             tags = "/".join(_tags_to_list(item.get("tags")))
@@ -395,7 +398,7 @@ def ensure_morning_briefing(portfolio_obj, enabled=True, force=False):
         if isinstance(last, dict) and last.get("date") == today:
             return last
     try:
-        with st.status("🌍 正在扫描全球宏观情报...", expanded=True) as status:
+        with st.status("正在扫描全球宏观情报...", expanded=True) as status:
             pack = tm.get_morning_pack()
             ctx = {
                 "global_indices": pack.get("indices"),
@@ -412,7 +415,7 @@ def ensure_morning_briefing(portfolio_obj, enabled=True, force=False):
                 "global_indices": pack.get("indices", {})
             }
             st.session_state["morning_result"] = res_pack
-            status.update(label="✅ 宏观推演完成", state="complete")
+            status.update(label="宏观推演完成", state="complete")
             return res_pack
     except Exception:
         return {"date": today, "view": "", "verdict": "", "details": {}}
@@ -491,11 +494,11 @@ def run_analysis_logic(stock_code, scanner, plotter, memory, kb, learner, user_p
         grid_fallback = _calc_grid_fallback(df, period=grid_period, multiplier=grid_multiplier)
 
         # 绘图
-        st.subheader(f"📈 {stock_label} 态势感知")
+        st.subheader(f"{stock_label} 态势感知")
         fig = plotter.plot_kline(df, title=stock_label)
         pos = user_portfolio.get_specific_position(stock_code)
         if pos and pos.get("cost", 0) > 0:
-            fig.add_hline(y=pos["cost"], line_dash="dash", line_color="blue", annotation_text=f"👮 成本:{pos['cost']}")
+            fig.add_hline(y=pos["cost"], line_dash="dash", line_color="blue", annotation_text=f"成本:{pos['cost']}")
         st.plotly_chart(fig, use_container_width=True)
 
     try:
@@ -532,12 +535,12 @@ def run_analysis_logic(stock_code, scanner, plotter, memory, kb, learner, user_p
 
     app = _get_tac_app()
 
-    with st.status("🧠 六维引擎计算中...", expanded=True) as status:
-        status.write("🔍 正在检索知识库战法...")
+    with st.status("六维引擎计算中...", expanded=True) as status:
+        status.write("正在检索知识库战法...")
         if k_titles:
-            status.write(f"📚 已匹配战法: {', '.join(k_titles[:3])}")
+            status.write(f"已匹配战法: {', '.join(k_titles[:3])}")
         else:
-            status.write("📚 暂无匹配的特定战法")
+            status.write("暂无匹配的特定战法")
 
         morning_view = morning_pack.get("view") if enable_morning else "无晨报"
         final_input = f"{style_prompt}|宏观:{morning_view}|庄家:{dealer_res.get('risk_level')}|筹码:{chip_res.get('status') if chip_res else '未知'}|周期:{cycle_res.get('phase')}"
@@ -562,7 +565,7 @@ def run_analysis_logic(stock_code, scanner, plotter, memory, kb, learner, user_p
             "data_quality": data_quality,
             "signal_source": {"source": source_info.get("source", "manual"), "label": source_info.get("label", "手动输入")}
         })
-        status.update(label="✅ 分析完成", state="complete")
+        status.update(label="分析完成", state="complete")
 
         try:
             sig = res.get("trading_signal", {})
@@ -643,6 +646,29 @@ def run_analysis_logic(stock_code, scanner, plotter, memory, kb, learner, user_p
         })
 
 
+def _format_core_view(text):
+    safe = html.escape(str(text or ""))
+    if not safe:
+        return ""
+    safe = safe.replace("\r\n", "\n").replace("\r", "\n")
+    if "\n" not in safe:
+        safe = re.sub(r"([\u3002\uFF1B])", r"\1\n", safe)
+        safe = re.sub(r"([\uFF1A:])", r"\1\n", safe)
+        safe = re.sub(r"(\d+\uFF09)", r"\n\1", safe)
+    safe = re.sub(r"\n{2,}", "\n", safe)
+    return safe
+
+
+def _preview_value(value, limit=3):
+    if isinstance(value, dict):
+        return {k: value[k] for k in list(value.keys())[:limit]}
+    if isinstance(value, (list, tuple)):
+        return list(value[:limit])
+    if isinstance(value, str):
+        return value if len(value) <= 200 else value[:200] + "..."
+    return value
+
+
 def render_result(pack):
     res = pack.get("res", {}) or {}
     cycle = pack.get("cycle", {}) or {}
@@ -681,7 +707,7 @@ def render_result(pack):
         f"{cycle.get('icon','⏱️')} {cycle.get('phase','未知')}</div>",
         unsafe_allow_html=True
     )
-    k_msg = f"📚 命中 {len(k_titles)} 个战法" if k_titles else "📚 无战法匹配"
+    k_msg = f"命中 {len(k_titles)} 个战法" if k_titles else "无战法匹配"
     c3.markdown(f"<div style='background:#e3f2fd;padding:5px;border-radius:5px;text-align:center'>{k_msg}</div>", unsafe_allow_html=True)
     source_label = source_info.get("label") or "手动输入"
     c4.markdown(f"<div style='background:#f3e5f5;padding:5px;border-radius:5px;text-align:center'>{source_label}</div>", unsafe_allow_html=True)
@@ -710,7 +736,7 @@ def render_result(pack):
             st.info(f"新闻校验: {ns}")
 
     if fin_snapshot:
-        st.subheader("💰 财务快照")
+        st.subheader("财务快照")
         score = fin_snapshot.get("score")
         grade = fin_snapshot.get("grade")
         metrics = fin_snapshot.get("metrics", {})
@@ -736,17 +762,17 @@ def render_result(pack):
             st.warning(fin_warning)
 
     if enable_news and macro_news:
-        with st.expander("🌐 宏观新闻", expanded=False):
+        with st.expander("宏观新闻", expanded=False):
             for item in macro_news[:10]:
                 st.write(item)
 
     if enable_news and news_list:
-        with st.expander("📰 个股新闻", expanded=False):
+        with st.expander("个股新闻", expanded=False):
             for item in news_list[:10]:
                 st.write(item)
 
     if k_items:
-        with st.expander("📚 战法匹配详情", expanded=False):
+        with st.expander("战法匹配详情", expanded=False):
             for i, item in enumerate(k_items):
                 title = item.get("title", "无标题")
                 tags = "/".join(item.get("tags", [])) if isinstance(item.get("tags"), list) else str(item.get("tags") or "")
@@ -762,12 +788,12 @@ def render_result(pack):
                     st.caption(f"风险: {struct.get('risk')}")
                 cfb1, cfb2 = st.columns(2)
                 with cfb1:
-                    if st.button("👍 有效", key=f"kb_like_{i}"):
+                    if st.button("有效", key=f"kb_like_{i}"):
                         if kb:
                             kb.record_feedback(title, 1)
                         st.toast(f"已反馈：{title}", icon="👍")
                 with cfb2:
-                    if st.button("👎 无效", key=f"kb_dislike_{i}"):
+                    if st.button("无效", key=f"kb_dislike_{i}"):
                         if kb:
                             kb.record_feedback(title, -1)
                         st.toast(f"已反馈：{title}", icon="👎")
@@ -776,55 +802,58 @@ def render_result(pack):
     final_score = max(0, min(100, final_score))
     color = "red" if final_score < 40 else "green" if final_score > 60 else "orange"
 
-    st.markdown(f"""
-    <div style='text-align:center;border:3px solid {color};padding:15px;border-radius:10px;margin:10px 0'>
-        <h1 style='color:{color};margin:0'>{act}</h1>
-        <h3 style='margin:0'>综合得分: {final_score}</h3>
-        <p style='color:gray'>{tactics.get('core_view')}</p>
-    </div>
-    """, unsafe_allow_html=True)
+    core_view = _format_core_view(tactics.get("core_view"))
+    safe_act = html.escape(str(act or "HOLD"))
+    card_html = (
+        f"<div style='text-align:center;border:3px solid {color};padding:15px;border-radius:10px;margin:10px 0'>"
+        f"<h1 style='color:{color};margin:0'>{safe_act}</h1>"
+        f"<h3 style='margin:0'>综合得分: {final_score}</h3>"
+        f"<p style='color:gray; text-align:left; line-height:1.6; white-space:pre-wrap; word-break:break-word'>{core_view}</p>"
+        "</div>"
+    )
+    st.markdown(card_html, unsafe_allow_html=True)
 
     exec_msg = res.get("execution_result")
     if exec_msg:
         st.info(f"纸面执行: {exec_msg}")
 
-    with st.expander("📊 六维全息评分详情 (点击展开)", expanded=True):
+    with st.expander("六维全息评分详情", expanded=True):
         sc1, sc2, sc3 = st.columns(3)
         def show_s(col, label, key):
             val = scores.get(key, 50)
             col.metric(label, f"{val}分")
             col.progress(min(100, max(0, int(val))))
 
-        show_s(sc1, "💰 资金筹码", "capital")
-        show_s(sc2, "📈 技术形态", "technical")
-        show_s(sc3, "🌍 宏观环境", "macro")
-        show_s(sc1, "📰 消息舆情", "news")
-        show_s(sc2, "🧠 历史记忆", "memory")
-        show_s(sc3, "📚 知识匹配", "knowledge")
+        show_s(sc1, "资金筹码", "capital")
+        show_s(sc2, "技术形态", "technical")
+        show_s(sc3, "宏观环境", "macro")
+        show_s(sc1, "消息舆情", "news")
+        show_s(sc2, "历史记忆", "memory")
+        show_s(sc3, "知识匹配", "knowledge")
         factor_usage = tactics.get("factor_usage", {}) if isinstance(tactics, dict) else {}
         if isinstance(factor_usage, dict) and factor_usage:
             usage_line = " | ".join([f"{k}:{'OK' if v else 'SKIP'}" for k, v in factor_usage.items()])
             st.caption(f"Factor input: {usage_line}")
 
     if dealer.get("risk_score", 0) > 0:
-        st.error(f"⚠️ {dealer.get('risk_level')}")
+        st.error(f"{dealer.get('risk_level')}")
 
     grid = tactics.get("grid_strategy", {}) if isinstance(tactics, dict) else {}
     if grid:
-        st.subheader("🕸️ 实战网格 (AI + ATR)")
+        st.subheader("实战网格 (AI + ATR)")
         g1, g2 = st.columns(2)
         with g1:
-            st.success("🟢 买入支撑区")
+            st.success("买入支撑区")
             st.write(f"买一: {grid.get('buy1_price')} ({grid.get('buy1_action')})")
             st.write(f"买二: {grid.get('buy2_price')} ({grid.get('buy2_action')})")
         with g2:
-            st.error("🔴 卖出压力区")
+            st.error("卖出压力区")
             st.write(f"卖一: {grid.get('sell1_price')} ({grid.get('sell1_action')})")
             st.write(f"卖二: {grid.get('sell2_price')} ({grid.get('sell2_action')})")
-        st.info(f"💡 策略: {grid.get('note')}")
+        st.info(f"策略: {grid.get('note')}")
 
     if grid_fallback:
-        with st.expander("🧭 备选网格 (ATR)", expanded=False):
+        with st.expander("备选网格 (ATR)", expanded=False):
             st.caption(f"ATR: {grid_fallback.get('atr')} | 止损: {grid_fallback.get('stop_loss')}")
             buy_grid = grid_fallback.get("buy_grid", [])
             sell_grid = grid_fallback.get("sell_grid", [])
@@ -835,7 +864,7 @@ def render_result(pack):
 
     risk = tactics.get("risk", {})
     if risk:
-        st.subheader("🛡️ 风控评估")
+        st.subheader("风控评估")
         r1, r2 = st.columns(2)
         r1.metric("风险等级", risk.get("level", "N/A"))
         r2.metric("风险分数", risk.get("score", 0))
@@ -854,16 +883,22 @@ def render_result(pack):
             st.write(f"- 止盈1: {stops.get('tp1')}")
             st.write(f"- 止盈2: {stops.get('tp2')}")
 
-    with st.expander("🧾 决策解释 (Why)", expanded=False):
+    with st.expander("决策解释", expanded=False):
         if tactics.get("risk_warning"):
             st.warning(tactics.get("risk_warning"))
-        st.markdown(f"**蓝军观点**: {tactics.get('blue_view', '')}")
-        st.markdown(f"**红军观点**: {tactics.get('red_view', '')}")
+        blue_view = str(tactics.get("blue_view", "") or "").strip()
+        red_view = str(tactics.get("red_view", "") or "").strip()
+        if not blue_view:
+            blue_view = "（蓝脑本轮没有有效输出，已降级）"
+        if not red_view:
+            red_view = "（红脑本轮没有有效输出，请检查红脑 API 配置或权限）"
+        st.markdown(f"**蓝军观点**: {blue_view}")
+        st.markdown(f"**红军观点**: {red_view}")
         st.markdown(f"**最终裁决**: {tactics.get('final_verdict', '')}")
 
     fw = tactics.get("feature_weights", {})
     if fw:
-        with st.expander("⚖️ 因子权重 (本次分析)", expanded=False):
+        with st.expander("因子权重", expanded=False):
             try:
                 st.json(fw)
             except Exception:
@@ -877,160 +912,102 @@ def render_result(pack):
     ref = res.get("reference_pack", {})
     feat = res.get("feature_pack", {})
     if ref or feat:
-        with st.expander("📌 参考/特色数据", expanded=False):
+        with st.expander("参考/特色数据", expanded=False):
             if ref:
                 st.markdown("**参考数据**")
                 for k, v in ref.items():
                     if v:
-                        st.write(f"{k}: {v[:3]}")
+                        st.write(f"{k}: {_preview_value(v)}")
             if feat:
                 st.markdown("**特色数据**")
                 for k, v in feat.items():
                     if v:
-                        st.write(f"{k}: {v[:3]}")
+                        st.write(f"{k}: {_preview_value(v)}")
 
     user_pos = res.get("user_position", {})
     if user_pos and user_pos.get("volume", 0) > 0:
-        st.warning(f"💰 持仓盈亏: {user_pos.get('profit', 0):.0f} ({user_pos.get('profit_pct', 0):.2f}%)")
+        st.warning(f"持仓盈亏: {user_pos.get('profit', 0):.0f} ({user_pos.get('profit_pct', 0):.2f}%)")
 
 
 def render(scanner, r, p, plotter, memory, kb, learner):
-    st.header("🧘 战术指挥室 V4.0 (联动增强)")
+    st.header("战术指挥室 V4.0")
     col_asset, col_tactics = st.columns([1, 2.5])
 
     with col_asset:
-        st.markdown("### 🏰 我的持仓")
-        finfo = portfolio_manager.get_fund_info()
-        st.metric("可用资金", f"¥{finfo.get('available', 0):,.0f}")
-        st.caption(f"总资产: ¥{finfo.get('principal', 0):,.0f} | 持仓占用: ¥{finfo.get('invested', 0):,.0f}")
-        with st.expander("✏️ 手动调整可用资金", expanded=False):
-            with st.form("cash_edit"):
-                avail = st.number_input("可用资金 (¥)", min_value=0.0, value=float(finfo.get("available", 0)), step=1000.0)
-                if st.form_submit_button("保存"):
-                    portfolio_manager.update_available(avail)
-                    st.success("已更新可用资金")
-                    st.rerun()
-        with st.expander("➕ 录入", expanded=False):
-            with st.form("add"):
-                c, cost, vol = st.text_input("代码"), st.number_input("成本"), st.number_input("股数", step=100)
-                if st.form_submit_button("保存") and c and vol > 0:
-                    portfolio_manager.add_position(c, vol, cost)
-                    log_event("position_update", {"code": c, "volume": float(vol), "cost": float(cost)})
-                    st.rerun()
+        with st.container(border=True):
+            st.subheader("我的持仓")
+            finfo = portfolio_manager.get_fund_info()
+            st.metric("可用资金", f"¥{finfo.get('available', 0):,.0f}")
+            st.caption(f"总资产: ¥{finfo.get('principal', 0):,.0f} | 持仓占用: ¥{finfo.get('invested', 0):,.0f}")
 
-        for code, info in list(portfolio_manager.get_all_positions().items()):
-            if not isinstance(info, dict):
-                continue
-            display = display_name(code, with_code=True)
-            st.markdown(f"**{display}**")
-            c1, c2 = st.columns(2)
-            c1.caption(f"成本:{info.get('cost')}")
-            c2.caption(f"股:{info.get('volume')}")
-            b1, b2 = st.columns(2)
-            if b1.button("🚀", key=f"a_{code}"):
-                st.session_state["tac_input"] = code
-                st.session_state["auto_run"] = True
-                st.rerun()
-            with b2:
-                with st.popover("卖出", use_container_width=True):
-                    st.caption(f"当前持仓：{int(info.get('volume', 0))} 股")
-                    with st.form(f"sell_{code}"):
-                        qty = st.number_input("卖出股数", min_value=0, max_value=int(info.get("volume", 0)), value=int(info.get("volume", 0)), step=100)
-                        price = st.number_input("卖出价格", min_value=0.0, value=float(info.get("cost", 0)), step=0.01)
-                        if st.form_submit_button("确认卖出"):
-                            if qty <= 0:
-                                st.warning("卖出股数需大于 0")
-                            else:
-                                ok = portfolio_manager.sell_position(code, qty, price)
-                                if ok:
-                                    log_event("position_sell", {"code": code, "volume": int(qty), "price": float(price)})
-                                    st.success("卖出完成")
-                                    st.rerun()
+            with st.expander("手动调整可用资金", expanded=False):
+                with st.form("cash_edit"):
+                    avail = st.number_input("可用资金 (¥)", min_value=0.0, value=float(finfo.get("available", 0)), step=1000.0)
+                    if st.form_submit_button("保存"):
+                        portfolio_manager.update_available(avail)
+                        st.success("已更新可用资金")
+                        st.rerun()
+            with st.expander("录入持仓", expanded=False):
+                with st.form("add"):
+                    c, cost, vol = st.text_input("代码"), st.number_input("成本"), st.number_input("股数", step=100)
+                    if st.form_submit_button("保存") and c and vol > 0:
+                        portfolio_manager.add_position(c, vol, cost)
+                        log_event("position_update", {"code": c, "volume": float(vol), "cost": float(cost)})
+                        st.rerun()
+
+            for code, info in list(portfolio_manager.get_all_positions().items()):
+                if not isinstance(info, dict):
+                    continue
+                display = display_name(code, with_code=True)
+                st.markdown(f"**{display}**")
+                c1, c2 = st.columns(2)
+                c1.caption(f"成本:{info.get('cost')}")
+                c2.caption(f"股:{info.get('volume')}")
+                b1, b2 = st.columns(2)
+                if b1.button("分析", key=f"a_{code}"):
+                    st.session_state["tac_input"] = code
+                    st.session_state["auto_run"] = True
+                    st.rerun()
+                with b2:
+                    with st.popover("卖出", use_container_width=True):
+                        st.caption(f"当前持仓：{int(info.get('volume', 0))} 股")
+                        with st.form(f"sell_{code}"):
+                            qty = st.number_input("卖出股数", min_value=0, max_value=int(info.get("volume", 0)), value=int(info.get("volume", 0)), step=100)
+                            price = st.number_input("卖出价格", min_value=0.0, value=float(info.get("cost", 0)), step=0.01)
+                            if st.form_submit_button("确认卖出"):
+                                if qty <= 0:
+                                    st.warning("卖出股数需大于 0")
                                 else:
-                                    st.error("卖出失败，请检查数量/价格")
-            st.divider()
+                                    ok = portfolio_manager.sell_position(code, qty, price)
+                                    if ok:
+                                        log_event("position_sell", {"code": code, "volume": int(qty), "price": float(price)})
+                                        st.success("卖出完成")
+                                        st.rerun()
+                                    else:
+                                        st.error("卖出失败，请检查数量/价格")
+                st.divider()
 
     with col_tactics:
-        st.markdown("### 📡 战术分析终端")
-        _render_skill_summaries(kb)
+        with st.container(border=True):
+            st.subheader("战术分析终端")
+            _render_skill_summaries(kb)
 
-        with st.expander("🔗 联动来源", expanded=False):
-            source_options = ["手动输入", "观测池", "雷达结果", "巡逻结果", "券商金股池", "策略池"]
-            src = st.selectbox("来源", source_options, key="tac_source_select")
+            with st.expander("联动来源", expanded=False):
+                source_options = ["手动输入", "观测池", "雷达结果", "巡逻结果", "券商金股池", "策略池"]
+                src = st.selectbox("来源", source_options, key="tac_source_select")
 
-            selected_code = None
-            source_label = "手动输入"
-            source_detail = ""
-            source_key = "manual"
+                selected_code = None
+                source_label = "手动输入"
+                source_detail = ""
+                source_key = "manual"
 
-            if src == "观测池":
-                codes = _load_watchlist_codes()
-                source_key = "watchlist"
-                source_label = "观测池"
-                source_detail = f"规模 {len(codes)}"
-                if not codes:
-                    st.info("观测池为空")
-                else:
-                    label_map = {}
-                    labels = []
-                    for code in codes:
-                        label = display_name(code, with_code=True)
-                        if label in label_map:
-                            label = f"{label} #{len(label_map) + 1}"
-                        label_map[label] = code
-                        labels.append(label)
-                    sel = st.selectbox("选择标的", labels, key="tac_wl_select")
-                    selected_code = label_map.get(sel)
-
-            elif src == "雷达结果":
-                results = _load_strategy_results()
-                source_key = "radar"
-                source_label = "雷达结果"
-                if not results:
-                    st.info("暂无雷达结果记录")
-                else:
-                    keys = sorted(list(results.keys()))
-                    sel_key = st.selectbox("选择雷达记录", keys, key="tac_radar_run")
-                    run = results.get(sel_key, {})
-                    codes = _extract_codes_from_run(run)
-                    source_detail = f"{run.get('strategy', '')} | {run.get('time', '')}".strip(" |")
+                if src == "观测池":
+                    codes = _load_watchlist_codes()
+                    source_key = "watchlist"
+                    source_label = "观测池"
+                    source_detail = f"规模 {len(codes)}"
                     if not codes:
-                        st.info("该记录无候选标的")
-                    else:
-                        reason_map = {}
-                        for item in run.get("candidates", []):
-                            if isinstance(item, dict) and item.get("code"):
-                                reason_map[_normalize_code(item.get("code"))] = item.get("reason", "")
-                        label_map = {}
-                        labels = []
-                        for code in codes:
-                            reason = reason_map.get(_normalize_code(code))
-                            base = display_name(code, with_code=True)
-                            label = f"{base} | {reason}" if reason else base
-                            if label in label_map:
-                                label = f"{label} #{len(label_map) + 1}"
-                            label_map[label] = code
-                            labels.append(label)
-                        sel = st.selectbox("选择标的", labels, key="tac_radar_select")
-                        selected_code = label_map.get(sel)
-
-            elif src == "巡逻结果":
-                history = _load_patrol_history()
-                source_key = "patrol"
-                source_label = "巡逻结果"
-                if not history:
-                    st.info("暂无巡逻记录")
-                else:
-                    labels = [
-                        f"{h.get('time','')} | {h.get('strategy','')} | {h.get('scope','')}"
-                        for h in history
-                    ]
-                    idx = st.selectbox("选择巡逻记录", list(range(len(history))), format_func=lambda i: labels[i], key="tac_patrol_run")
-                    run = history[idx] if idx is not None else {}
-                    codes = _extract_codes_from_run(run)
-                    source_detail = f"{run.get('strategy', '')} | {run.get('time', '')}".strip(" |")
-                    if not codes:
-                        st.info("该记录无候选标的")
+                        st.info("观测池为空")
                     else:
                         label_map = {}
                         labels = []
@@ -1040,44 +1017,79 @@ def render(scanner, r, p, plotter, memory, kb, learner):
                                 label = f"{label} #{len(label_map) + 1}"
                             label_map[label] = code
                             labels.append(label)
-                        sel = st.selectbox("选择标的", labels, key="tac_patrol_select")
+                        sel = st.selectbox("选择标的", labels, key="tac_wl_select")
                         selected_code = label_map.get(sel)
 
-            elif src == "券商金股池":
-                entries, meta = _load_broker_pool()
-                source_key = "broker_pool"
-                source_label = "券商金股池"
-                month = meta.get("month")
-                updated = meta.get("updated_at")
-                source_detail = f"{month or ''} {updated or ''}".strip()
-                if not entries:
-                    st.info("券商金股池为空")
-                else:
-                    label_map = {}
-                    labels = []
-                    for item in entries:
-                        code = item.get("code")
-                        label = display_name(code, with_code=True) if code else str(item)
-                        if label in label_map:
-                            label = f"{label} #{len(label_map) + 1}"
-                        label_map[label] = code
-                        labels.append(label)
-                    sel = st.selectbox("选择标的", labels, key="tac_broker_select")
-                    selected_code = label_map.get(sel)
+                elif src == "雷达结果":
+                    results = _load_strategy_results()
+                    source_key = "radar"
+                    source_label = "雷达结果"
+                    if not results:
+                        st.info("暂无雷达结果记录")
+                    else:
+                        keys = sorted(list(results.keys()))
+                        sel_key = st.selectbox("选择雷达记录", keys, key="tac_radar_run")
+                        run = results.get(sel_key, {})
+                        codes = _extract_codes_from_run(run)
+                        source_detail = f"{display_strategy_name(run.get('strategy', ''))} | {run.get('time', '')}".strip(" |")
+                        if not codes:
+                            st.info("该记录无候选标的")
+                        else:
+                            reason_map = {}
+                            for item in run.get("candidates", []):
+                                if isinstance(item, dict) and item.get("code"):
+                                    reason_map[_normalize_code(item.get("code"))] = item.get("reason", "")
+                            label_map = {}
+                            labels = []
+                            for code in codes:
+                                reason = reason_map.get(_normalize_code(code))
+                                base = display_name(code, with_code=True)
+                                label = f"{base} | {reason}" if reason else base
+                                if label in label_map:
+                                    label = f"{label} #{len(label_map) + 1}"
+                                label_map[label] = code
+                                labels.append(label)
+                            sel = st.selectbox("选择标的", labels, key="tac_radar_select")
+                            selected_code = label_map.get(sel)
 
-            elif src == "策略池":
-                pools = _load_strategy_pools()
-                source_key = "strategy_pool"
-                source_label = "策略池"
-                if not pools:
-                    st.info("暂无策略池")
-                else:
-                    pool_names = sorted(list(pools.keys()))
-                    pool_key = st.selectbox("选择策略池", pool_names, key="tac_pool_select")
-                    entries, meta = _load_strategy_pool(pool_key)
-                    source_detail = f"{pool_key} | {len(entries)} 只"
+                elif src == "巡逻结果":
+                    history = _load_patrol_history()
+                    source_key = "patrol"
+                    source_label = "巡逻结果"
+                    if not history:
+                        st.info("暂无巡逻记录")
+                    else:
+                        labels = [
+                            f"{h.get('time','')} | {h.get('strategy','')} | {h.get('scope','')}"
+                            for h in history
+                        ]
+                        idx = st.selectbox("选择巡逻记录", list(range(len(history))), format_func=lambda i: labels[i], key="tac_patrol_run")
+                        run = history[idx] if idx is not None else {}
+                        codes = _extract_codes_from_run(run)
+                        source_detail = f"{display_strategy_name(run.get('strategy', ''))} | {run.get('time', '')}".strip(" |")
+                        if not codes:
+                            st.info("该记录无候选标的")
+                        else:
+                            label_map = {}
+                            labels = []
+                            for code in codes:
+                                label = display_name(code, with_code=True)
+                                if label in label_map:
+                                    label = f"{label} #{len(label_map) + 1}"
+                                label_map[label] = code
+                                labels.append(label)
+                            sel = st.selectbox("选择标的", labels, key="tac_patrol_select")
+                            selected_code = label_map.get(sel)
+
+                elif src == "券商金股池":
+                    entries, meta = _load_broker_pool()
+                    source_key = "broker_pool"
+                    source_label = "券商金股池"
+                    month = meta.get("month")
+                    updated = meta.get("updated_at")
+                    source_detail = f"{month or ''} {updated or ''}".strip()
                     if not entries:
-                        st.info("该策略池为空")
+                        st.info("券商金股池为空")
                     else:
                         label_map = {}
                         labels = []
@@ -1088,366 +1100,394 @@ def render(scanner, r, p, plotter, memory, kb, learner):
                                 label = f"{label} #{len(label_map) + 1}"
                             label_map[label] = code
                             labels.append(label)
-                        sel = st.selectbox("选择标的", labels, key="tac_pool_code_select")
+                        sel = st.selectbox("选择标的", labels, key="tac_broker_select")
                         selected_code = label_map.get(sel)
 
-            if selected_code:
-                source_info = {
-                    "source": source_key,
-                    "label": source_label,
-                    "detail": source_detail,
-                    "code": selected_code
-                }
-                b1, b2 = st.columns(2)
-                if b1.button("载入到战术", key=f"tac_load_{source_key}"):
-                    st.session_state["tac_input"] = selected_code
-                    st.session_state["tac_source_info"] = source_info
-                    st.success("已载入")
-                if b2.button("载入并分析", key=f"tac_load_run_{source_key}"):
-                    st.session_state["tac_input"] = selected_code
-                    st.session_state["tac_source_info"] = source_info
-                    st.session_state["auto_run"] = True
-                    st.rerun()
+                elif src == "策略池":
+                    pools = _load_strategy_pools()
+                    source_key = "strategy_pool"
+                    source_label = "策略池"
+                    if not pools:
+                        st.info("暂无策略池")
+                    else:
+                        pool_names = sorted(list(pools.keys()))
+                        pool_key = st.selectbox("选择策略池", pool_names, key="tac_pool_select")
+                        entries, meta = _load_strategy_pool(pool_key)
+                        source_detail = f"{pool_key} | {len(entries)} 只"
+                        if not entries:
+                            st.info("该策略池为空")
+                        else:
+                            label_map = {}
+                            labels = []
+                            for item in entries:
+                                code = item.get("code")
+                                label = display_name(code, with_code=True) if code else str(item)
+                                if label in label_map:
+                                    label = f"{label} #{len(label_map) + 1}"
+                                label_map[label] = code
+                                labels.append(label)
+                            sel = st.selectbox("选择标的", labels, key="tac_pool_code_select")
+                            selected_code = label_map.get(sel)
 
-        enable_morning = True
-        enable_kb = True
-        enable_sentiment = True
-        enable_news = True
-        enable_fin = True
-        save_history = True
-        grid_period = 14
-        grid_multiplier = 1.0
-        fin_threshold = None
+                if selected_code:
+                    source_info = {
+                        "source": source_key,
+                        "label": source_label,
+                        "detail": source_detail,
+                        "code": selected_code
+                    }
+                    b1, b2 = st.columns(2)
+                    if b1.button("载入到战术", key=f"tac_load_{source_key}"):
+                        st.session_state["tac_input"] = selected_code
+                        st.session_state["tac_source_info"] = source_info
+                        st.success("已载入")
+                    if b2.button("载入并分析", key=f"tac_load_run_{source_key}"):
+                        st.session_state["tac_input"] = selected_code
+                        st.session_state["tac_source_info"] = source_info
+                        st.session_state["auto_run"] = True
+                        st.rerun()
 
-        profiles = load_profiles()
-        profile_names = list_profile_names(profiles)
-        active_profile = get_active_profile_name(profiles)
-        if active_profile not in profiles:
-            active_profile = profile_names[0]
-        active_profile_data = get_profile(active_profile, profiles)
-        tac_profile = active_profile_data.get("tactics", {}) if isinstance(active_profile_data, dict) else {}
+            enable_morning = True
+            enable_kb = True
+            enable_sentiment = True
+            enable_news = True
+            enable_fin = True
+            save_history = True
+            grid_period = 14
+            grid_multiplier = 1.0
+            fin_threshold = None
 
-        with st.expander("🧭 阈值方案（新手推荐）", expanded=False):
-            idx = profile_names.index(active_profile) if active_profile in profile_names else 0
+            profiles = load_profiles()
+            profile_names = list_profile_names(profiles)
+            active_profile = get_active_profile_name(profiles)
+            if active_profile not in profiles:
+                active_profile = profile_names[0]
+            active_profile_data = get_profile(active_profile, profiles)
+            tac_profile = active_profile_data.get("tactics", {}) if isinstance(active_profile_data, dict) else {}
+
+            with st.expander("阈值方案", expanded=False):
+                idx = profile_names.index(active_profile) if active_profile in profile_names else 0
             profile_name = st.selectbox("选择方案", profile_names, index=idx, key="tac_profile_select")
             desc = PROFILE_DESC.get(profile_name)
             if desc:
                 st.caption(desc)
-            if st.button("一键套用到战术参数", key="tac_profile_apply"):
-                _apply_tactics_profile(get_profile(profile_name, profiles))
-                set_active_profile_name(profile_name)
-                st.success("已应用战术阈值方案")
-                st.rerun()
+                if st.button("一键套用到战术参数", key="tac_profile_apply"):
+                    _apply_tactics_profile(get_profile(profile_name, profiles))
+                    set_active_profile_name(profile_name)
+                    st.success("已应用战术阈值方案")
+                    st.rerun()
 
-        with st.expander("⚙️ 参数面板", expanded=False):
-            c1, c2, c3 = st.columns(3)
-            enable_morning = c1.checkbox(
-                "晨报指引",
+            with st.expander("参数面板", expanded=False):
+                c1, c2, c3 = st.columns(3)
+                enable_morning = c1.checkbox(
+                    "晨报指引",
                 value=st.session_state.get("tac_enable_morning", bool(tac_profile.get("enable_morning", True))),
                 key="tac_enable_morning"
             )
-            enable_kb = c2.checkbox(
-                "知识库匹配",
+                enable_kb = c2.checkbox(
+                    "知识库匹配",
                 value=st.session_state.get("tac_enable_kb", bool(tac_profile.get("enable_kb", True))),
                 key="tac_enable_kb"
             )
-            enable_sentiment = c3.checkbox(
-                "情绪天气",
+                enable_sentiment = c3.checkbox(
+                    "情绪天气",
                 value=st.session_state.get("tac_enable_sentiment", bool(tac_profile.get("enable_sentiment", True))),
                 key="tac_enable_sentiment"
             )
-            c4, c5, c6 = st.columns(3)
-            enable_news = c4.checkbox(
-                "新闻校验",
+                c4, c5, c6 = st.columns(3)
+                enable_news = c4.checkbox(
+                    "新闻校验",
                 value=st.session_state.get("tac_enable_news", bool(tac_profile.get("enable_news", True))),
                 key="tac_enable_news"
             )
-            enable_fin = c5.checkbox(
-                "财务快照",
+                enable_fin = c5.checkbox(
+                    "财务快照",
                 value=st.session_state.get("tac_enable_fin", bool(tac_profile.get("enable_fin", True))),
                 key="tac_enable_fin"
             )
-            save_history = c6.checkbox(
-                "写入战术复盘",
+                save_history = c6.checkbox(
+                    "写入战术复盘",
                 value=st.session_state.get("tac_save_history", bool(tac_profile.get("save_history", True))),
                 key="tac_save_history"
             )
 
-            grid_period_default = int(tac_profile.get("grid_period", 14))
-            grid_multiplier_default = float(tac_profile.get("grid_multiplier", 1.0))
-            grid_period = st.slider(
-                "网格 ATR 周期",
-                7,
-                30,
-                int(st.session_state.get("tac_grid_period", grid_period_default)),
-                key="tac_grid_period"
+                grid_period_default = int(tac_profile.get("grid_period", 14))
+                grid_multiplier_default = float(tac_profile.get("grid_multiplier", 1.0))
+                grid_period = st.slider(
+                    "网格 ATR 周期",
+                    7,
+                    30,
+                    int(st.session_state.get("tac_grid_period", grid_period_default)),
+                    key="tac_grid_period"
+                )
+                grid_multiplier = st.slider(
+                    "网格倍数",
+                    0.5,
+                    3.0,
+                    float(st.session_state.get("tac_grid_mult", grid_multiplier_default)),
+                    step=0.1,
+                    key="tac_grid_mult"
+                )
+
+                if enable_fin:
+                    fin_settings = _load_fin_settings()
+                    default_fin = fin_settings.get("threshold")
+                    if default_fin is None:
+                        default_fin = int(tac_profile.get("fin_threshold", 70))
+                    fin_threshold = st.slider("财务评分阈值", 50, 90, int(default_fin), step=5, key="tac_fin_threshold")
+                    fin_settings["threshold"] = fin_threshold
+                    _save_fin_settings(fin_settings)
+
+                if st.button("重置战术引擎"):
+                    if "tactics_app" in st.session_state:
+                        del st.session_state["tactics_app"]
+                    st.success("战术引擎已重置")
+                    st.rerun()
+
+            if "tac_input" not in st.session_state:
+                st.session_state["tac_input"] = "000001.SZ"
+            target = st.text_input("代码", key="tac_input")
+            deep_risk_default = bool(tac_profile.get("deep_risk", False))
+            deep_risk = st.checkbox(
+                "启用深度风控/参考数据",
+                value=st.session_state.get("tac_deep_risk", deep_risk_default),
+                key="tac_deep_risk"
             )
-            grid_multiplier = st.slider(
-                "网格倍数",
-                0.5,
-                3.0,
-                float(st.session_state.get("tac_grid_mult", grid_multiplier_default)),
-                step=0.1,
-                key="tac_grid_mult"
-            )
+            paper_exec = st.checkbox("纸面执行（模拟下单）", value=False, key="tac_paper_exec")
 
-            if enable_fin:
-                fin_settings = _load_fin_settings()
-                default_fin = fin_settings.get("threshold")
-                if default_fin is None:
-                    default_fin = int(tac_profile.get("fin_threshold", 70))
-                fin_threshold = st.slider("财务评分阈值", 50, 90, int(default_fin), step=5, key="tac_fin_threshold")
-                fin_settings["threshold"] = fin_threshold
-                _save_fin_settings(fin_settings)
+            do_run = st.session_state.get("auto_run", False)
+            if do_run:
+                st.session_state["auto_run"] = False
 
-            if st.button("重置战术引擎"):
-                if "tactics_app" in st.session_state:
-                    del st.session_state["tactics_app"]
-                st.success("战术引擎已重置")
-                st.rerun()
+            if st.button("部署战术", type="primary", use_container_width=True) or do_run:
+                if target:
+                    source_info = st.session_state.get("tac_source_info") or {"source": "manual", "label": "手动输入"}
+                    if source_info.get("code") and _normalize_code(source_info.get("code")) != _normalize_code(target):
+                        source_info = {"source": "manual", "label": "手动输入"}
 
-        if "tac_input" not in st.session_state:
-            st.session_state["tac_input"] = "000001.SZ"
-        target = st.text_input("代码", key="tac_input")
-        deep_risk_default = bool(tac_profile.get("deep_risk", False))
-        deep_risk = st.checkbox(
-            "启用深度风控/参考数据（消耗积分）",
-            value=st.session_state.get("tac_deep_risk", deep_risk_default),
-            key="tac_deep_risk"
-        )
-        paper_exec = st.checkbox("纸面执行（模拟下单）", value=False, key="tac_paper_exec")
-
-        do_run = st.session_state.get("auto_run", False)
-        if do_run:
-            st.session_state["auto_run"] = False
-
-        if st.button("🔥 部署战术", type="primary", use_container_width=True) or do_run:
-            if target:
-                source_info = st.session_state.get("tac_source_info") or {"source": "manual", "label": "手动输入"}
-                if source_info.get("code") and _normalize_code(source_info.get("code")) != _normalize_code(target):
-                    source_info = {"source": "manual", "label": "手动输入"}
-
-                settings = {
-                    "enable_morning": enable_morning,
-                    "enable_kb": enable_kb,
-                    "enable_sentiment": enable_sentiment,
-                    "enable_news": enable_news,
-                    "enable_financial": enable_fin,
-                    "grid_period": grid_period,
-                    "grid_multiplier": grid_multiplier,
-                    "fin_threshold": fin_threshold,
-                    "save_history": save_history,
-                    "deep_risk": deep_risk,
-                    "paper_execute": paper_exec
-                }
-                run_analysis_logic(target, scanner, plotter, memory, kb, learner, portfolio_manager, settings, source_info)
-
-        with st.expander("📦 批量分析", expanded=False):
-            batch_source = st.selectbox("来源", ["观测池", "雷达结果", "巡逻结果", "券商金股池", "策略池"], key="tac_batch_source")
-            batch_codes = []
-            batch_label = ""
-
-            if batch_source == "观测池":
-                batch_codes = _load_watchlist_codes()
-                batch_label = "观测池"
-            elif batch_source == "券商金股池":
-                entries, meta = _load_broker_pool()
-                batch_codes = [e.get("code") for e in entries if e.get("code")]
-                batch_label = f"券商金股池 {meta.get('month','')}"
-            elif batch_source == "策略池":
-                pools = _load_strategy_pools()
-                if pools:
-                    pool_names = sorted(list(pools.keys()))
-                    sel_pool = st.selectbox("选择策略池", pool_names, key="tac_batch_pool")
-                    entries, _ = _load_strategy_pool(sel_pool)
-                    batch_codes = [e.get("code") for e in entries if e.get("code")]
-                    batch_label = f"策略池 {sel_pool}"
-                else:
-                    st.info("暂无策略池")
-            elif batch_source == "雷达结果":
-                results = _load_strategy_results()
-                if results:
-                    keys = sorted(list(results.keys()))
-                    sel_key = st.selectbox("选择雷达记录", keys, key="tac_batch_radar")
-                    run = results.get(sel_key, {})
-                    batch_codes = _extract_codes_from_run(run)
-                    batch_label = f"雷达 {run.get('strategy','')}"
-                else:
-                    st.info("暂无雷达结果")
-            elif batch_source == "巡逻结果":
-                history = _load_patrol_history()
-                if history:
-                    labels = [
-                        f"{h.get('time','')} | {h.get('strategy','')} | {h.get('scope','')}"
-                        for h in history
-                    ]
-                    idx = st.selectbox("选择巡逻记录", list(range(len(history))), format_func=lambda i: labels[i], key="tac_batch_patrol")
-                    run = history[idx] if idx is not None else {}
-                    batch_codes = _extract_codes_from_run(run)
-                    batch_label = f"巡逻 {run.get('strategy','')}"
-                else:
-                    st.info("暂无巡逻记录")
-
-            batch_codes = [c for c in batch_codes if c]
-            batch_codes = list(dict.fromkeys(batch_codes))
-
-            if not batch_codes:
-                st.caption("无可用标的")
-            else:
-                limit_max = min(300, len(batch_codes))
-                top_n_default = min(50, limit_max)
-                top_n = st.slider("批量数量上限", 5, limit_max, top_n_default, step=5, key="tac_batch_topn")
-                batch_mode = st.radio("分析模式", ["快评", "深度"], horizontal=True, key="tac_batch_mode")
-                batch_save = st.checkbox("写入战术复盘", value=False, key="tac_batch_save")
-
-                if st.button("开始批量分析", key="tac_batch_run"):
-                    app = _get_tac_app()
-                    progress = st.progress(0)
-                    results = []
-                    total = min(top_n, len(batch_codes))
-                    codes = batch_codes[:total]
-
-                    last_trade_date = None
-                    try:
-                        last_trade_date = scanner.data_skill.get_last_trade_date()
-                    except Exception:
-                        last_trade_date = None
-
-                    weather = sentiment.get_weather_report() if enable_sentiment and batch_mode == "深度" else {
-                        "weather": "中性", "icon": "⛅", "bg_color": "#eeeeee"
+                    settings = {
+                        "enable_morning": enable_morning,
+                        "enable_kb": enable_kb,
+                        "enable_sentiment": enable_sentiment,
+                        "enable_news": enable_news,
+                        "enable_financial": enable_fin,
+                        "grid_period": grid_period,
+                        "grid_multiplier": grid_multiplier,
+                        "fin_threshold": fin_threshold,
+                        "save_history": save_history,
+                        "deep_risk": deep_risk,
+                        "paper_execute": paper_exec
                     }
-                    morning_pack = ensure_morning_briefing(portfolio_manager, enabled=enable_morning and batch_mode == "深度")
+                    run_analysis_logic(target, scanner, plotter, memory, kb, learner, portfolio_manager, settings, source_info)
 
-                    for i, code in enumerate(codes):
-                        progress.progress((i + 1) / total)
-                        df = scanner.data_skill.get_history(code, days=200)
-                        if df is None or df.empty:
-                            continue
-                        data_quality = _data_quality(df, last_trade_date)
+        with st.container(border=True):
+            st.subheader("批量任务与复盘")
+            with st.expander("批量分析", expanded=False):
+                batch_source = st.selectbox("来源", ["观测池", "雷达结果", "巡逻结果", "券商金股池", "策略池"], key="tac_batch_source")
+                batch_codes = []
+                batch_label = ""
 
-                        if batch_mode == "深度":
-                            dealer_res = hunter.analyze(df)
-                            chip_res = chip_analyst.analyze(df)
-                            cycle_res = compass.detect_phase(df)
-                            liq_res = liq_guard.check(df)
-                        else:
-                            dealer_res = {}
-                            chip_res = {}
-                            cycle_res = {"score_impact": 0, "phase": "N/A", "icon": "⏱️"}
-                            liq_res = {}
+                if batch_source == "观测池":
+                    batch_codes = _load_watchlist_codes()
+                    batch_label = "观测池"
+                elif batch_source == "券商金股池":
+                    entries, meta = _load_broker_pool()
+                    batch_codes = [e.get("code") for e in entries if e.get("code")]
+                    batch_label = f"券商金股池 {meta.get('month','')}"
+                elif batch_source == "策略池":
+                    pools = _load_strategy_pools()
+                    if pools:
+                        pool_names = sorted(list(pools.keys()))
+                        sel_pool = st.selectbox("选择策略池", pool_names, key="tac_batch_pool")
+                        entries, _ = _load_strategy_pool(sel_pool)
+                        batch_codes = [e.get("code") for e in entries if e.get("code")]
+                        batch_label = f"策略池 {sel_pool}"
+                    else:
+                        st.info("暂无策略池")
+                elif batch_source == "雷达结果":
+                    results = _load_strategy_results()
+                    if results:
+                        keys = sorted(list(results.keys()))
+                        sel_key = st.selectbox("选择雷达记录", keys, key="tac_batch_radar")
+                        run = results.get(sel_key, {})
+                        batch_codes = _extract_codes_from_run(run)
+                        batch_label = f"雷达 {display_strategy_name(run.get('strategy',''))}"
+                    else:
+                        st.info("暂无雷达结果")
+                elif batch_source == "巡逻结果":
+                    history = _load_patrol_history()
+                    if history:
+                        labels = [
+                            f"{h.get('time','')} | {h.get('strategy','')} | {h.get('scope','')}"
+                            for h in history
+                        ]
+                        idx = st.selectbox("选择巡逻记录", list(range(len(history))), format_func=lambda i: labels[i], key="tac_batch_patrol")
+                        run = history[idx] if idx is not None else {}
+                        batch_codes = _extract_codes_from_run(run)
+                        batch_label = f"巡逻 {display_strategy_name(run.get('strategy',''))}"
+                    else:
+                        st.info("暂无巡逻记录")
 
-                        if enable_kb and batch_mode == "深度":
-                            try:
-                                kb_query = " ".join([
-                                    str(cycle_res.get("phase", "") or ""),
-                                    str(dealer_res.get("risk_level", "") or ""),
-                                    str(chip_res.get("status", "") or ""),
-                                    str(liq_res.get("status", "") or "")
-                                ]).strip()
-                                kb_pack = kb.build_context(kb_query, limit=3)
-                                k_ctx = kb_pack.get("context") or "无特定战法"
-                                k_titles = kb_pack.get("titles", [])
-                            except Exception:
-                                k_ctx = "知识库连接异常"
-                                k_titles = []
-                        else:
-                            k_ctx = "批量快评"
-                            k_titles = []
+                batch_codes = [c for c in batch_codes if c]
+                batch_codes = list(dict.fromkeys(batch_codes))
 
-                        morning_view = morning_pack.get("view") if enable_morning and batch_mode == "深度" else "无晨报"
-                        final_input = f"批量分析|宏观:{morning_view}|周期:{cycle_res.get('phase')}"
+                if not batch_codes:
+                    st.caption("无可用标的")
+                else:
+                    limit_max = min(300, len(batch_codes))
+                    top_n_default = min(50, limit_max)
+                    top_n = st.slider("批量数量上限", 5, limit_max, top_n_default, step=5, key="tac_batch_topn")
+                    batch_mode = st.radio("分析模式", ["快评", "深度"], horizontal=True, key="tac_batch_mode")
+                    batch_save = st.checkbox("写入战术复盘", value=False, key="tac_batch_save")
 
+                    if st.button("开始批量分析", key="tac_batch_run"):
+                        app = _get_tac_app()
+                        progress = st.progress(0)
+                        results = []
+                        total = min(top_n, len(batch_codes))
+                        codes = batch_codes[:total]
+
+                        last_trade_date = None
                         try:
-                            res = app.invoke({
-                                "stock_code": code,
-                                "messages": [],
-                                "morning_strategy": final_input,
-                                "knowledge_context": k_ctx,
-                                "deep_risk": batch_mode == "深度",
-                                "paper_execute": False,
-                                "dealer_hunter": dealer_res,
-                                "chip_analyst": chip_res,
-                                "cycle_compass": cycle_res,
-                                "liquidity_guard": liq_res,
-                                "sentiment_weather": weather if enable_sentiment else {},
-                                "knowledge_titles": k_titles,
-                                "knowledge_items": []
-                            })
+                            last_trade_date = scanner.data_skill.get_last_trade_date()
                         except Exception:
-                            continue
+                            last_trade_date = None
 
-                        sig = res.get("trading_signal", {})
-                        details = sig.get("details", {})
-                        scores = details.get("scores", {})
-                        score_val = scores.get("total", 50) + cycle_res.get("score_impact", 0)
-                        score_val = max(0, min(100, score_val))
-
-                        price = df.iloc[-1].get("close") if "close" in df.columns else None
-                        pct = df.iloc[-1].get("pct_chg") if "pct_chg" in df.columns else None
-
-                        fin_snapshot = _calc_fin_snapshot(scanner, code) if enable_fin else None
-                        fin_score = fin_snapshot.get("score") if fin_snapshot else None
-
-                        row = {
-                            "code": code,
-                            "name": display_name(code),
-                            "action": sig.get("action", "HOLD"),
-                            "score": score_val,
-                            "price": price,
-                            "pct": pct,
-                            "fin_score": fin_score,
-                            "last_date": data_quality.get("last_date"),
-                            "last_trade_date": data_quality.get("last_trade_date"),
-                            "source": batch_label
+                        weather = sentiment.get_weather_report() if enable_sentiment and batch_mode == "深度" else {
+                            "weather": "中性", "icon": "⛅", "bg_color": "#eeeeee"
                         }
-                        results.append(row)
+                        morning_pack = ensure_morning_briefing(portfolio_manager, enabled=enable_morning and batch_mode == "深度")
 
-                        if batch_save:
-                            record = {
-                                "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        for i, code in enumerate(codes):
+                            progress.progress((i + 1) / total)
+                            df = scanner.data_skill.get_history(code, days=200)
+                            if df is None or df.empty:
+                                continue
+                            data_quality = _data_quality(df, last_trade_date)
+
+                            if batch_mode == "深度":
+                                dealer_res = hunter.analyze(df)
+                                chip_res = chip_analyst.analyze(df)
+                                cycle_res = compass.detect_phase(df)
+                                liq_res = liq_guard.check(df)
+                            else:
+                                dealer_res = {}
+                                chip_res = {}
+                                cycle_res = {"score_impact": 0, "phase": "N/A", "icon": "⏱️"}
+                                liq_res = {}
+
+                            if enable_kb and batch_mode == "深度":
+                                try:
+                                    kb_query = " ".join([
+                                        str(cycle_res.get("phase", "") or ""),
+                                        str(dealer_res.get("risk_level", "") or ""),
+                                        str(chip_res.get("status", "") or ""),
+                                        str(liq_res.get("status", "") or "")
+                                    ]).strip()
+                                    kb_pack = kb.build_context(kb_query, limit=3)
+                                    k_ctx = kb_pack.get("context") or "无特定战法"
+                                    k_titles = kb_pack.get("titles", [])
+                                except Exception:
+                                    k_ctx = "知识库连接异常"
+                                    k_titles = []
+                            else:
+                                k_ctx = "批量快评"
+                                k_titles = []
+
+                            morning_view = morning_pack.get("view") if enable_morning and batch_mode == "深度" else "无晨报"
+                            final_input = f"批量分析|宏观:{morning_view}|周期:{cycle_res.get('phase')}"
+
+                            try:
+                                res = app.invoke({
+                                    "stock_code": code,
+                                    "messages": [],
+                                    "morning_strategy": final_input,
+                                    "knowledge_context": k_ctx,
+                                    "deep_risk": batch_mode == "深度",
+                                    "paper_execute": False,
+                                    "dealer_hunter": dealer_res,
+                                    "chip_analyst": chip_res,
+                                    "cycle_compass": cycle_res,
+                                    "liquidity_guard": liq_res,
+                                    "sentiment_weather": weather if enable_sentiment else {},
+                                    "knowledge_titles": k_titles,
+                                    "knowledge_items": []
+                                })
+                            except Exception:
+                                continue
+
+                            sig = res.get("trading_signal", {})
+                            details = sig.get("details", {})
+                            scores = details.get("scores", {})
+                            score_val = scores.get("total", 50) + cycle_res.get("score_impact", 0)
+                            score_val = max(0, min(100, score_val))
+
+                            price = df.iloc[-1].get("close") if "close" in df.columns else None
+                            pct = df.iloc[-1].get("pct_chg") if "pct_chg" in df.columns else None
+
+                            fin_snapshot = _calc_fin_snapshot(scanner, code) if enable_fin else None
+                            fin_score = fin_snapshot.get("score") if fin_snapshot else None
+
+                            row = {
                                 "code": code,
                                 "name": display_name(code),
                                 "action": sig.get("action", "HOLD"),
                                 "score": score_val,
-                                "source": {"source": "batch", "label": batch_label},
+                                "price": price,
+                                "pct": pct,
                                 "fin_score": fin_score,
-                                "data_quality": data_quality,
-                                "settings": {
-                                    "batch_mode": batch_mode,
-                                    "enable_financial": enable_fin,
-                                    "enable_kb": enable_kb
-                                }
+                                "last_date": data_quality.get("last_date"),
+                                "last_trade_date": data_quality.get("last_trade_date"),
+                                "source": batch_label
                             }
-                            _save_tactics_record(record)
+                            results.append(row)
 
-                    progress.empty()
-                    if results:
-                        df_view = pd.DataFrame(results)
-                        st.dataframe(df_view, use_container_width=True)
-                        st.download_button(
-                            "导出批量结果 CSV",
-                            data=df_view.to_csv(index=False),
-                            file_name=f"tactics_batch_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                            mime="text/csv"
-                        )
-                    else:
-                        st.info("批量分析无结果")
+                            if batch_save:
+                                record = {
+                                    "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                    "code": code,
+                                    "name": display_name(code),
+                                    "action": sig.get("action", "HOLD"),
+                                    "score": score_val,
+                                    "source": {"source": "batch", "label": batch_label},
+                                    "fin_score": fin_score,
+                                    "data_quality": data_quality,
+                                    "settings": {
+                                        "batch_mode": batch_mode,
+                                        "enable_financial": enable_fin,
+                                        "enable_kb": enable_kb
+                                    }
+                                }
+                                _save_tactics_record(record)
 
-        with st.expander("📝 战术复盘", expanded=False):
-            history = _load_tactics_history()
-            if not history:
-                st.info("暂无战术复盘记录")
-            else:
-                labels = [
-                    f"{h.get('time','')} | {h.get('code','')} | {h.get('action','')}"
-                    for h in history
-                ]
-                idx = st.selectbox("选择记录", list(range(len(history))), format_func=lambda i: labels[i], key="tac_hist_select")
-                record = history[idx] if idx is not None else {}
-                if record:
-                    st.caption(f"时间: {record.get('time','')} | 得分: {record.get('score','')}")
-                    st.json(record)
-                    if st.button("载入到战术", key="tac_hist_load"):
-                        st.session_state["tac_input"] = record.get("code", "")
-                        st.session_state["auto_run"] = True
-                        st.rerun()
+                        progress.empty()
+                        if results:
+                            df_view = pd.DataFrame(results)
+                            st.dataframe(df_view, use_container_width=True)
+                            st.download_button(
+                                "导出批量结果 CSV",
+                                data=df_view.to_csv(index=False),
+                                file_name=f"tactics_batch_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                                mime="text/csv"
+                            )
+                        else:
+                            st.info("批量分析无结果")
+
+            with st.expander("战术复盘", expanded=False):
+                history = _load_tactics_history()
+                if not history:
+                    st.info("暂无战术复盘记录")
+                else:
+                    labels = [
+                        f"{h.get('time','')} | {h.get('code','')} | {h.get('action','')}"
+                        for h in history
+                    ]
+                    idx = st.selectbox("选择记录", list(range(len(history))), format_func=lambda i: labels[i], key="tac_hist_select")
+                    record = history[idx] if idx is not None else {}
+                    if record:
+                        st.caption(f"时间: {record.get('time','')} | 得分: {record.get('score','')}")
+                        st.json(record)
+                        if st.button("载入到战术", key="tac_hist_load"):
+                            st.session_state["tac_input"] = record.get("code", "")
+                            st.session_state["auto_run"] = True
+                            st.rerun()

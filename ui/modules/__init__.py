@@ -18,3 +18,4 @@ from . import luck
 from . import metrics
 from . import watchlist
 from . import agents
+from . import blindbox

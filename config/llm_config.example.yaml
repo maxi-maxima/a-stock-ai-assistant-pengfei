@@ -41,3 +41,15 @@ system:
   tushare_token: "YOUR_TUSHARE_TOKEN"
   max_retries: 3
   timeout: 30
+
+debate:
+  enabled: true
+  rounds: 3
+  temperature: 0.2
+  role_rotation:
+    enabled: true
+    mode: "by_symbol"
+  multi_judge:
+    enabled: true
+    judges: ["green", "blue", "red"]
+    consensus: "majority"

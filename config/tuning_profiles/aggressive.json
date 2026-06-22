@@ -1,0 +1,98 @@
+{
+  "profile": "aggressive",
+  "description": "进攻模板：优先提升收益弹性，接受更高波动",
+  "files": {
+    "config/strategy_training.json": {
+      "days": 1200,
+      "max_codes": 140,
+      "min_trades": 2,
+      "train_ratio": 0.65,
+      "window_count": 3,
+      "pool_min_samples": 5,
+      "pool_top_k": 6,
+      "watchlist_top_k": 120,
+      "strategy_pools_top_k": 100,
+      "default_params": {
+        "tp": 0.15,
+        "sl": 0.07,
+        "days": 30,
+        "position_pct": 1.0,
+        "execution": "next_open"
+      }
+    },
+    "config/backtest_params.json": {
+      "__default__": {
+        "tp": 0.15,
+        "sl": 0.07,
+        "days": 30
+      },
+      "hot_money": {
+        "tp": 0.35,
+        "sl": 0.12,
+        "days": 60
+      },
+      "dna": {
+        "tp": 0.24,
+        "sl": 0.1,
+        "days": 30
+      },
+      "oversold": {
+        "tp": 0.1,
+        "sl": 0.08,
+        "days": 35
+      },
+      "tail_strength": {
+        "tp": 0.2,
+        "sl": 0.09,
+        "days": 20
+      }
+    },
+    "config/strategy_params.json": {
+      "skill_oscillator_combo": {
+        "rsi_oversold": 32,
+        "require_price_up": false
+      },
+      "skill_volume_confirm": {
+        "breakout_pct": -0.002,
+        "vol_mult": 1.3,
+        "require_close_up": false
+      },
+      "skill_pattern_breakout": {
+        "min_width": 0.07,
+        "breakout_pct": 0.02,
+        "vol_mult": 1.2
+      },
+      "skill_risk_guard": {
+        "atr_max_pct": 0.07,
+        "vol_min_ratio": 0.7
+      }
+    },
+    "config/strategy_governor.json": {
+      "min_samples": 4,
+      "watch_below": -0.03,
+      "disable_below": -0.12,
+      "min_win_rate": 0.35,
+      "cooldown_days": 2
+    },
+    "config/agent_lightning.json": {
+      "n_workers": 1,
+      "max_tasks": 30,
+      "buy_threshold": 58.0,
+      "sell_threshold": 52.0,
+      "risk_level_mode": "critic"
+    },
+    "config/trading_costs.json": {
+      "commission": 0.0003,
+      "slippage": 0.0003,
+      "stamp_duty": 0.001,
+      "min_commission": 5.0,
+      "lot_size": 100
+    },
+    "config/ma_periods.json": {
+      "method": "ema",
+      "short": [3, 5],
+      "mid": [13, 34],
+      "long": [89, 144]
+    }
+  }
+}

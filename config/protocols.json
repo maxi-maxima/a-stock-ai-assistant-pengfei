@@ -1,0 +1,24 @@
+{
+  "version": "1.1",
+  "agent_report": {
+    "required": ["agent_id", "agent_type", "status", "summary"],
+    "allowed_statuses": ["ok", "warn", "fail", "idle"]
+  },
+  "decision": {
+    "required": ["action", "suggested_action", "scores", "feature_weights", "decision_sample"],
+    "required_sample": ["thesis", "risk_points", "confidence", "strategy_tags", "timeframe"],
+    "allowed_actions": ["BUY", "SELL", "HOLD"],
+    "allowed_timeframes": ["intraday", "swing_1_5d", "swing_3_10d", "position_10_30d", "watchlist"]
+  },
+  "tool_task": {
+    "required_any": ["tool", "kind"],
+    "required_when_kind": {
+      "composio": ["tool"]
+    },
+    "fields": ["tool", "args", "kind", "map_to", "timeout_s", "tags", "purpose"]
+  },
+  "tool_result": {
+    "required": ["tool", "ok"],
+    "fields": ["tool", "ok", "data", "error", "latency_ms"]
+  }
+}

@@ -4,6 +4,7 @@ import os
 import json
 import datetime
 from core.stock_name import display_name
+from core.strategy_display import display_strategy_name
 from core.watchlist import load_entries, append_entries
 from skills.dealer_hunter import DealerHunter
 from core.cognitive_graph import build_cognitive_graph
@@ -487,12 +488,12 @@ def render(scanner, plotter):
             st.info("暂无策略结果记录")
         else:
             strategies = sorted(list(data.keys()))
-            sel = st.selectbox("选择策略", strategies)
+            sel = st.selectbox("选择策略", strategies, format_func=display_strategy_name)
             run = data.get(sel, {})
             if not run:
                 st.info("无可用记录")
             else:
-                st.caption(f"时间: {run.get('time', '')} | 范围: {run.get('scope', '')} | 策略: {run.get('strategy', '')}")
+                st.caption(f"时间: {run.get('time', '')} | 范围: {run.get('scope', '')} | 策略: {display_strategy_name(run.get('strategy', ''))}")
                 st.metric("命中数量", run.get("count", 0))
                 cands = run.get("candidates", [])
                 if cands:

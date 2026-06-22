@@ -4,9 +4,10 @@ import json
 from core.portfolio import VirtualPortfolio
 from core.learning_log import log_event
 from core.memory import MemoryManager
-from core.experience_store import ExperienceStore
+from core.experience_store import ExperienceStore, EXPERIENCE_LOG
 from core.skill_registry import SkillRegistry
-from core.event_bus import EventBus
+from core.event_bus import EventBus, EVENT_BUS_PATH
+from core.decision_sample import ensure_decision_sample
 from skills.data_factory import DataSkillFactory
 from skills.risk_budget import max_drawdown, var_gaussian, risk_level_from_metrics
 
@@ -75,24 +76,37 @@ def _load_trading_costs():
     return out
 
 
-def _write_trade(record):
-    os.makedirs(os.path.dirname(TRADE_LOG), exist_ok=True)
+def _write_trade(record, path=TRADE_LOG):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     try:
-        with open(TRADE_LOG, "a", encoding="utf-8") as f:
+        with open(path, "a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
     except Exception:
         pass
 
 
 class PaperBroker:
-    def __init__(self, portfolio_path="data/paper_portfolio.json"):
+    def __init__(
+        self,
+        portfolio_path="data/paper_portfolio.json",
+        trade_log_path=TRADE_LOG,
+        event_bus_path=EVENT_BUS_PATH,
+        experience_path=EXPERIENCE_LOG,
+        log_learning=True,
+        log_memory=True,
+        update_registry=True,
+    ):
         self.portfolio = VirtualPortfolio(portfolio_path)
+        self.trade_log_path = trade_log_path
+        self.log_learning = bool(log_learning)
+        self.log_memory = bool(log_memory)
+        self.update_registry = bool(update_registry)
         self._equity_curve = []
         self._rules_cache = None
         self._data_skill = None
-        self._experience = ExperienceStore()
+        self._experience = ExperienceStore(path=experience_path)
         self._registry = SkillRegistry()
-        self._event_bus = EventBus()
+        self._event_bus = EventBus(path=event_bus_path)
         self._costs_cache = None
 
     def _ensure_decision(self, action, code, reason="", signal_source=None, features=None):
@@ -112,6 +126,7 @@ class PaperBroker:
             event_payload = dict(payload)
             if "suggested_action" not in event_payload:
                 event_payload["suggested_action"] = action
+            event_payload = ensure_decision_sample(event_payload)
             self._event_bus.log(
                 "decision",
                 payload=event_payload,
@@ -577,8 +592,9 @@ class PaperBroker:
             record["signal_source"] = signal_source
         # log equity after trade
         record["equity"] = equity
-        _write_trade(record)
-        log_event("paper_trade", record)
+        _write_trade(record, path=self.trade_log_path)
+        if self.log_learning:
+            log_event("paper_trade", record)
         try:
             self._experience.log_execution({
                 "decision_id": decision_id,
@@ -615,28 +631,29 @@ class PaperBroker:
             )
         except Exception:
             pass
-        try:
-            MemoryManager().save_episode(
-                code,
-                "BUY",
-                exec_price,
-                {
-                    "decision_id": decision_id,
-                    "reason": reason,
-                    "shares": shares,
-                    "signal_source": signal_source,
-                    "features": features or {},
-                    "equity": equity,
-                    "execution": "paper_broker",
-                    "commission": commission,
-                    "slippage_rate": slippage,
-                    "fee_total": commission,
-                    "raw_price": price
-                },
-                manual_teach=False
-            )
-        except Exception:
-            pass
+        if self.log_memory:
+            try:
+                MemoryManager().save_episode(
+                    code,
+                    "BUY",
+                    exec_price,
+                    {
+                        "decision_id": decision_id,
+                        "reason": reason,
+                        "shares": shares,
+                        "signal_source": signal_source,
+                        "features": features or {},
+                        "equity": equity,
+                        "execution": "paper_broker",
+                        "commission": commission,
+                        "slippage_rate": slippage,
+                        "fee_total": commission,
+                        "raw_price": price
+                    },
+                    manual_teach=False
+                )
+            except Exception:
+                pass
         msg = f"买入 {shares} 股"
         if note:
             msg = f"{msg} ({note})"
@@ -752,23 +769,26 @@ class PaperBroker:
         if isinstance(signal_source, dict):
             record["signal_source"] = signal_source
         record["equity"] = equity
-        _write_trade(record)
-        log_event("paper_trade", record)
+        _write_trade(record, path=self.trade_log_path)
+        if self.log_learning:
+            log_event("paper_trade", record)
         pnl_pct = None
         try:
             denom = cost * shares
             pnl_pct = (pnl / denom) if denom else None
         except Exception:
             pnl_pct = None
-        try:
-            if origin_strategy and pnl_pct is not None:
-                self._registry.update_performance(origin_strategy, pnl_pct)
-        except Exception:
-            pass
+        if self.update_registry:
+            try:
+                if origin_strategy and pnl_pct is not None:
+                    self._registry.update_performance(origin_strategy, pnl_pct)
+            except Exception:
+                pass
         try:
             self._experience.log_outcome(origin_decision_id or decision_id, {
                 "code": code,
                 "action": "SELL",
+                "eval_type": "sell_realized",
                 "price": exec_price,
                 "shares": shares,
                 "pnl": pnl,
@@ -788,6 +808,7 @@ class PaperBroker:
                 "execution",
                 payload={
                     "action": "SELL",
+                    "eval_type": "sell_realized",
                     "price": exec_price,
                     "shares": shares,
                     "pnl": pnl,
@@ -814,6 +835,7 @@ class PaperBroker:
                 "outcome",
                 payload={
                     "action": "SELL",
+                    "eval_type": "sell_realized",
                     "price": exec_price,
                     "shares": shares,
                     "pnl": pnl,
@@ -832,45 +854,47 @@ class PaperBroker:
             )
         except Exception:
             pass
-        try:
-            MemoryManager().save_episode(
-                code,
-                "SELL",
-                exec_price,
-                {
-                    "decision_id": decision_id,
-                    "origin_decision_id": origin_decision_id,
-                    "reason": reason,
-                    "shares": shares,
-                    "pnl": pnl,
-                    "pnl_pct": pnl_pct,
-                    "signal_source": signal_source,
-                    "features": features or {},
-                    "equity": equity,
-                    "execution": "paper_broker",
-                    "commission": commission,
-                    "stamp_duty": stamp_duty,
-                    "slippage_rate": slippage,
-                    "fee_total": fee_total,
-                    "raw_price": price
-                },
-                manual_teach=False
-            )
-        except Exception:
-            pass
+        if self.log_memory:
+            try:
+                MemoryManager().save_episode(
+                    code,
+                    "SELL",
+                    exec_price,
+                    {
+                        "decision_id": decision_id,
+                        "origin_decision_id": origin_decision_id,
+                        "reason": reason,
+                        "shares": shares,
+                        "pnl": pnl,
+                        "pnl_pct": pnl_pct,
+                        "signal_source": signal_source,
+                        "features": features or {},
+                        "equity": equity,
+                        "execution": "paper_broker",
+                        "commission": commission,
+                        "stamp_duty": stamp_duty,
+                        "slippage_rate": slippage,
+                        "fee_total": fee_total,
+                        "raw_price": price
+                    },
+                    manual_teach=False
+                )
+            except Exception:
+                pass
 
         # adaptive learning hooks (after outcome logging)
-        try:
-            if os.getenv("AUTO_BIAS_UPDATE", "1") == "1":
-                from core.experience_feedback import update_bias
-                update_bias()
-        except Exception:
-            pass
-        try:
-            from core.threshold_adaptor import maybe_update_overrides
-            maybe_update_overrides()
-        except Exception:
-            pass
+        if self.update_registry:
+            try:
+                if os.getenv("AUTO_BIAS_UPDATE", "1") == "1":
+                    from core.experience_feedback import update_bias
+                    update_bias()
+            except Exception:
+                pass
+            try:
+                from core.threshold_adaptor import maybe_update_overrides
+                maybe_update_overrides()
+            except Exception:
+                pass
 
         # risk budget metrics
         mdd = max_drawdown(self._equity_curve)
@@ -885,6 +909,7 @@ class PaperBroker:
         else:
             var = 0.0
         level = risk_level_from_metrics(mdd, var)
-        log_event("risk_budget", {"mdd": mdd, "var": var, "level": level})
+        if self.log_learning:
+            log_event("risk_budget", {"mdd": mdd, "var": var, "level": level})
 
         return True, f"卖出 {shares} 股，盈亏 {pnl:.0f}"

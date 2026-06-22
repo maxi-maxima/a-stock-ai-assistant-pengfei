@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "dev_mode": true,
+  "n_workers": 1,
+  "max_tasks": 20,
+  "task_source": "watchlist",
+  "custom_codes": [],
+  "mode": "stock",
+  "reward_mode": "score_risk_adjusted",
+  "disable_news": false,
+  "paper_execute": false,
+  "report_path": "data/agent_lightning_report.jsonl",
+  "override_action_by_score": true,
+  "buy_threshold": 62.0,
+  "sell_threshold": 50.0,
+  "risk_level_mode": "critic"
+}

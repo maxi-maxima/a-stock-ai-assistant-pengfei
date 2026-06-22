@@ -7,11 +7,18 @@ import plotly.express as px
 import streamlit as st
 
 from core.metrics import compute_kpis, compute_loop_health
+from core.strategy_display import display_strategy_name
 from core.skill_registry import SkillRegistry
 from core.event_index import update_index, query_context, query_events
+from core.learning_engine_v2 import refresh_learning_views
+from core.experiment_tracker_v1 import refresh_experiment_tracking, load_experiment_history
+from core.upgrade_pipeline import run_upgrade_with_retries
+from core.upgrade_scheduler import load_scheduler_config, load_scheduler_latest, save_scheduler_config
 
 TRAINING_REPORT_PATH = "data/strategy_training_report.jsonl"
 TRAINING_CONFIG_PATH = "config/strategy_training.json"
+LEARNING_PROFILES_PATH = "data/strategy_profiles.json"
+EXPERIMENT_TRACKING_PATH = "data/experiment_tracking.jsonl"
 
 
 def _format_pct(val):
@@ -196,6 +203,38 @@ def _load_training_daily(path=TRAINING_REPORT_PATH, limit=120):
     return daily
 
 
+def _load_learning_profiles(path=LEARNING_PROFILES_PATH):
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _load_experiment_tracking_latest(path=EXPERIMENT_TRACKING_PATH):
+    rows = load_experiment_history(path=path, limit=1)
+    if not rows:
+        return None
+    rec = rows[-1]
+    return rec if isinstance(rec, dict) else None
+
+
+def _load_experiment_tracking_history(path=EXPERIMENT_TRACKING_PATH, limit=120):
+    rows = load_experiment_history(path=path, limit=limit)
+    if not rows:
+        return pd.DataFrame()
+    df = pd.DataFrame([r for r in rows if isinstance(r, dict)])
+    if "ts" in df.columns:
+        try:
+            df["ts"] = pd.to_datetime(df["ts"], errors="coerce")
+        except Exception:
+            pass
+    return df
+
+
 def render():
     st.header("\u7cfb\u7edfKPI")
     kpis = compute_kpis()
@@ -281,8 +320,8 @@ def render():
         c3.metric("\u6709\u5956\u52b1\u7b56\u7565", skill_summary.get("rewarded", 0))
 
         st.caption(f"skills.db \u7b56\u7565\u603b\u6570: {skill_summary.get('strategies', 0)}")
-        st.caption(f"\u6743\u91cd\u504f\u7f6e\u66f4\u65b0\u65f6\u95f4: {health.get('bias_updated_at') or 'n/a'}")
-        st.caption(f"\u9608\u503c\u8986\u76d6\u66f4\u65b0\u65f6\u95f4: {health.get('threshold_overrides_updated_at') or 'n/a'}")
+        st.caption(f"\u6743\u91cd\u504f\u7f6e\u66f4\u65b0\u65f6\u95f4: {health.get('bias_updated_at') or '无'}")
+        st.caption(f"\u9608\u503c\u8986\u76d6\u66f4\u65b0\u65f6\u95f4: {health.get('threshold_overrides_updated_at') or '无'}")
     else:
         st.info("\u6682\u65e0\u65e5\u62a5\uff0c\u70b9\u51fb\u4e0a\u65b9\u6309\u94ae\u8fd0\u884c\u95ed\u73af\u68c0\u67e5")
 
@@ -310,6 +349,228 @@ def render():
             pass
     else:
         st.info("\u6682\u65e0\u95ed\u73af\u65e5\u62a5\u5386\u53f2")
+
+    st.divider()
+    st.subheader("\u5b66\u4e60\u5f15\u64ce V2")
+    refresh_learning = st.button("\u5237\u65b0\u5b66\u4e60\u6837\u672c\u4e0e\u7b56\u7565\u753b\u50cf")
+    if refresh_learning:
+        try:
+            info = refresh_learning_views(days=365, apply=True)
+            st.session_state["learning_refresh"] = info
+        except Exception:
+            st.session_state["learning_refresh"] = {"ok": False}
+
+    lr = st.session_state.get("learning_refresh")
+    if isinstance(lr, dict) and lr:
+        if lr.get("ok"):
+            st.caption(
+                f"\u5237\u65b0\u5b8c\u6210: samples={lr.get('sample_count', 0)} | "
+                f"valid_rate={_format_pct(lr.get('valid_rate', 0))} | "
+                f"labeled_rate={_format_pct(lr.get('labeled_rate', 0))}"
+            )
+        else:
+            st.warning("\u5b66\u4e60\u89c6\u56fe\u5237\u65b0\u5931\u8d25")
+
+    learning_data = _load_learning_profiles()
+    if learning_data:
+        summary = learning_data.get("summary", {}) if isinstance(learning_data.get("summary", {}), dict) else {}
+        top_profiles = learning_data.get("top_profiles", []) if isinstance(learning_data.get("top_profiles", []), list) else []
+
+        l1, l2, l3, l4 = st.columns(4)
+        l1.metric("\u6837\u672c\u603b\u6570", summary.get("sample_count", 0))
+        l2.metric("\u6709\u6807\u7b7e\u6837\u672c", summary.get("labeled_count", 0))
+        l3.metric("\u6709\u6548\u6837\u672c\u7387", _format_pct(summary.get("valid_rate", 0)))
+        l4.metric("\u6807\u7b7e\u8986\u76d6\u7387", _format_pct(summary.get("labeled_rate", 0)))
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric("\u51a0\u519b\u7b56\u7565", display_strategy_name(summary.get("champion_strategy")) or "无")
+        c2.metric("\u51a0\u519b\u8870\u51cf\u6536\u76ca", _format_pct(summary.get("champion_decayed_pnl_pct", 0)))
+        c3.metric("\u6f02\u79fb\u9884\u8b66", summary.get("drift_warning_count", 0))
+
+        drift = summary.get("drift_warnings", []) if isinstance(summary.get("drift_warnings", []), list) else []
+        if drift:
+            st.warning("\u68c0\u6d4b\u5230\u7b56\u7565\u6f02\u79fb\u9884\u8b66\uff0c\u8bf7\u5173\u6ce8\u8fd1 7 \u5929\u8868\u73b0\u4e0b\u884c\u7684\u7b56\u7565\u3002")
+            st.dataframe(pd.DataFrame(drift), use_container_width=True)
+
+        if top_profiles:
+            df_top = pd.DataFrame(top_profiles)
+            show_cols = [c for c in ["strategy", "sample_count", "labeled_count", "win_rate", "avg_pnl_pct", "decayed_pnl_pct", "drift_7_vs_30", "last_ts"] if c in df_top.columns]
+            if show_cols:
+                st.dataframe(df_top[show_cols], use_container_width=True)
+            else:
+                st.dataframe(df_top, use_container_width=True)
+        else:
+            st.info("\u6682\u65e0\u53ef\u5c55\u793a\u7684\u7b56\u7565\u753b\u50cf\u3002")
+    else:
+        st.info("\u6682\u65e0\u5b66\u4e60\u5f15\u64ce V2 \u8f93\u51fa\uff0c\u53ef\u70b9\u51fb\u4e0a\u65b9\u6309\u94ae\u5237\u65b0\u3002")
+
+    st.divider()
+    st.subheader("\u5b9e\u9a8c\u8ddf\u8e2a V1")
+    if "experiment_tracking" not in st.session_state:
+        latest_tracking = _load_experiment_tracking_latest()
+        if latest_tracking:
+            st.session_state["experiment_tracking"] = latest_tracking
+            st.session_state["experiment_tracking_source"] = "report"
+
+    refresh_tracking = st.button("\u5237\u65b0\u5b9e\u9a8c\u8ddf\u8e2a")
+    if refresh_tracking:
+        try:
+            info = refresh_experiment_tracking(apply=True)
+            st.session_state["experiment_tracking"] = info
+            st.session_state["experiment_tracking_source"] = "manual"
+        except Exception:
+            st.session_state["experiment_tracking"] = {"ok": False}
+
+    et = st.session_state.get("experiment_tracking")
+    if isinstance(et, dict) and et:
+        if et.get("ok") is False:
+            st.warning("\u5b9e\u9a8c\u8ddf\u8e2a\u5237\u65b0\u5931\u8d25")
+        else:
+            src = st.session_state.get("experiment_tracking_source")
+            if src == "report":
+                st.caption("\u6570\u636e\u6765\u6e90: \u5386\u53f2\u8ddf\u8e2a\u8bb0\u5f55")
+            elif src == "manual":
+                st.caption("\u6570\u636e\u6765\u6e90: \u624b\u52a8\u89e6\u53d1")
+
+            e1, e2, e3, e4 = st.columns(4)
+            e1.metric("\u6837\u672c\u6570", et.get("sample_count", 0))
+            e2.metric("\u6807\u7b7e\u8986\u76d6\u7387", _format_pct(et.get("labeled_rate", 0)))
+            e3.metric("\u6709\u6548\u6837\u672c\u7387", _format_pct(et.get("valid_rate", 0)))
+            e4.metric("\u7b56\u7565\u753b\u50cf\u6570", et.get("profile_count", 0))
+
+            f1, f2, f3 = st.columns(3)
+            f1.metric("\u51a0\u519b\u7b56\u7565", display_strategy_name(et.get("champion_strategy")) or "无")
+            f2.metric("\u51a0\u519b\u8870\u51cf\u6536\u76ca", _format_pct(et.get("champion_decayed_pnl_pct", 0)))
+            f3.metric("\u51a0\u519b\u6f02\u79fb(7vs30)", _format_pct(et.get("champion_drift_7_vs_30", 0)))
+
+            if et.get("mlflow_enabled"):
+                if et.get("mlflow_logged"):
+                    st.caption("实验跟踪（MLflow）：已写入")
+                else:
+                    st.caption(f"实验跟踪（MLflow）：未写入（{et.get('mlflow_error') or '未知原因'}）")
+
+    et_hist = _load_experiment_tracking_history()
+    if et_hist is not None and not et_hist.empty:
+        df_et = et_hist.copy()
+        if "ts" in df_et.columns:
+            df_et = df_et.set_index("ts")
+        cols = [
+            c for c in [
+                "labeled_rate",
+                "valid_rate",
+                "champion_decayed_pnl_pct",
+                "champion_drift_7_vs_30",
+                "drift_warning_count",
+            ] if c in df_et.columns
+        ]
+        if cols:
+            st.line_chart(df_et[cols])
+        show_cols = [
+            c for c in [
+                "ts",
+                "sample_count",
+                "labeled_rate",
+                "valid_rate",
+                "profile_count",
+                "champion_strategy",
+                "champion_decayed_pnl_pct",
+                "champion_drift_7_vs_30",
+                "drift_warning_count",
+            ] if c in et_hist.columns
+        ]
+        if show_cols:
+            st.dataframe(et_hist[show_cols].tail(30), use_container_width=True)
+        else:
+            st.dataframe(et_hist.tail(30), use_container_width=True)
+        try:
+            st.download_button("\u4e0b\u8f7d\u5b9e\u9a8c\u8ddf\u8e2aCSV", et_hist.to_csv(index=False), file_name="experiment_tracking.csv", mime="text/csv")
+        except Exception:
+            pass
+    else:
+        st.info("\u6682\u65e0\u5b9e\u9a8c\u8ddf\u8e2a\u6570\u636e\uff0c\u53ef\u70b9\u51fb\u4e0a\u65b9\u6309\u94ae\u751f\u6210\u3002")
+
+    st.divider()
+    st.subheader("升级与回测自动化")
+
+    scheduler_cfg = load_scheduler_config()
+    latest_scheduler = load_scheduler_latest()
+
+    with st.expander("每日定时配置", expanded=False):
+        s1, s2, s3 = st.columns(3)
+        enabled = s1.checkbox("启用每日定时", value=bool(scheduler_cfg.get("enabled", True)), key="upgrade_sched_enabled")
+        schedule_time = s2.text_input("执行时间(HH:MM)", value=str(scheduler_cfg.get("schedule_time", "02:30")), key="upgrade_sched_time")
+        skip_weekends = s3.checkbox("跳过周末", value=bool(scheduler_cfg.get("skip_weekends", False)), key="upgrade_sched_skip_weekends")
+
+        t1, t2, t3 = st.columns(3)
+        days_cfg = t1.number_input("回看天数", 30, 2000, int(scheduler_cfg.get("days", 365) or 365), key="upgrade_sched_days")
+        attempts_cfg = t2.number_input("失败重试次数", 1, 10, int(scheduler_cfg.get("max_attempts", 3) or 3), key="upgrade_sched_attempts")
+        mode_cfg = t3.selectbox(
+            "训练模式",
+            ["light", "full"],
+            index=0 if str(scheduler_cfg.get("training_mode", "light")) == "light" else 1,
+            key="upgrade_sched_mode",
+        )
+        train_enabled_cfg = st.checkbox("包含训练阶段", value=bool(scheduler_cfg.get("training_enabled", True)), key="upgrade_sched_train_enabled")
+
+        if st.button("保存定时配置"):
+            ok_save = save_scheduler_config(
+                {
+                    "enabled": bool(enabled),
+                    "schedule_time": str(schedule_time).strip() or "02:30",
+                    "skip_weekends": bool(skip_weekends),
+                    "days": int(days_cfg),
+                    "max_attempts": int(attempts_cfg),
+                    "training_enabled": bool(train_enabled_cfg),
+                    "training_mode": str(mode_cfg),
+                }
+            )
+            if ok_save:
+                st.success("配置已保存到 config/upgrade_scheduler.json")
+            else:
+                st.warning("配置保存失败")
+
+        st.caption("一次执行命令: python tools/upgrade_scheduler_daemon.py --once")
+        st.caption("常驻定时命令: python tools/upgrade_scheduler_daemon.py --run-now")
+
+    if latest_scheduler:
+        st.caption(
+            f"最近定时结果: ts={latest_scheduler.get('ts','')} | ok={latest_scheduler.get('ok')} | "
+            f"attempts={latest_scheduler.get('attempts_used', 0)}"
+        )
+        if (latest_scheduler.get("ok") is False) and (not latest_scheduler.get("skipped")):
+            st.warning("最近一次定时任务失败，请检查 data/upgrade_scheduler_latest.json")
+
+    with st.expander("手动执行：升级 + 回测", expanded=False):
+        m1, m2, m3 = st.columns(3)
+        manual_days = m1.number_input("手动回看天数", 30, 2000, int(scheduler_cfg.get("days", 365) or 365), key="upgrade_manual_days")
+        manual_attempts = m2.number_input("手动重试次数", 1, 10, int(scheduler_cfg.get("max_attempts", 3) or 3), key="upgrade_manual_attempts")
+        manual_mode = m3.selectbox("手动训练模式", ["light", "full"], key="upgrade_manual_mode")
+        manual_train_enabled = st.checkbox("手动包含训练", value=bool(scheduler_cfg.get("training_enabled", True)), key="upgrade_manual_train_enabled")
+
+        if st.button("开始执行升级与回测", type="primary"):
+            with st.spinner("正在执行升级与回测，请稍候..."):
+                try:
+                    run_out = run_upgrade_with_retries(
+                        days=int(manual_days),
+                        max_attempts=int(manual_attempts),
+                        training_enabled=bool(manual_train_enabled),
+                        training_mode=str(manual_mode),
+                        apply=True,
+                    )
+                    st.session_state["manual_upgrade_result"] = run_out
+                except Exception:
+                    st.session_state["manual_upgrade_result"] = {"ok": False, "attempts": []}
+
+        mres = st.session_state.get("manual_upgrade_result")
+        if isinstance(mres, dict) and mres:
+            r1, r2, r3 = st.columns(3)
+            r1.metric("是否通过", "是" if mres.get("ok") else "否")
+            r2.metric("实际尝试次数", mres.get("attempts_used", 0))
+            final_report = mres.get("final_report", {}) if isinstance(mres.get("final_report", {}), dict) else {}
+            r3.metric("烟雾回测通过数", (final_report.get("smoke", {}) or {}).get("passed_cases", 0))
+            attempts_rows = mres.get("attempts", []) if isinstance(mres.get("attempts", []), list) else []
+            if attempts_rows:
+                st.dataframe(pd.DataFrame(attempts_rows), use_container_width=True)
 
     st.divider()
     st.subheader("\u7b56\u7565\u8bad\u7ec3\u5668")

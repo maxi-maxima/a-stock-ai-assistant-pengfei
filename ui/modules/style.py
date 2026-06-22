@@ -74,7 +74,7 @@ def render(learner, memory):
             else:
                 prof, logs = learner.learn_from_examples(samps)
                 if isinstance(prof, dict):
-                    st.success("DNA 提取成功！")
+                    st.success("风格基因提取成功！")
                     st.write(prof)
                     if prof.get("behavior"):
                         st.info(f"行为画像: 风险偏好={prof['behavior'].get('risk_appetite')} | 持仓偏好={prof['behavior'].get('holding_preference')} | 活跃度={prof['behavior'].get('activity_level')}")

@@ -1,0 +1,9 @@
+{
+  "enabled": true,
+  "schedule_time": "02:30",
+  "skip_weekends": false,
+  "days": 365,
+  "max_attempts": 3,
+  "training_enabled": true,
+  "training_mode": "light"
+}

@@ -1,0 +1,59 @@
+{
+  "version": "1.0",
+  "updated_at": "2026-02-23T00:00:00",
+  "capabilities": {
+    "orchestrators": {
+      "autogen": {
+        "enabled": true,
+        "status": "integrated",
+        "priority": 1,
+        "notes": "Multi-agent orchestration"
+      },
+      "crewai": {
+        "enabled": false,
+        "status": "planned",
+        "priority": 2,
+        "notes": "Role-based multi-agent workflows"
+      }
+    },
+    "tools": {
+      "composio": {
+        "enabled": true,
+        "status": "integrated",
+        "priority": 1,
+        "notes": "External tool hub and integrations"
+      },
+      "browser_use": {
+        "enabled": true,
+        "status": "integrated",
+        "priority": 2,
+        "notes": "Browser automation for non-API data"
+      },
+      "skyvern": {
+        "enabled": false,
+        "status": "planned",
+        "priority": 3,
+        "notes": "LLM-driven browser automation (AGPL)"
+      }
+    },
+    "memory": {
+      "letta": {
+        "enabled": true,
+        "status": "integrated",
+        "priority": 3,
+        "notes": "Long-term agent memory"
+      }
+    },
+    "optimizers": {
+      "agent_lightning": {
+        "enabled": true,
+        "status": "integrated",
+        "priority": 4,
+        "notes": "Evaluation and optimization runner"
+      }
+    },
+    "agents": {},
+    "browsers": {},
+    "data": {}
+  }
+}

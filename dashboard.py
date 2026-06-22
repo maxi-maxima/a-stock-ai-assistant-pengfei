@@ -17,7 +17,7 @@ from core.memory import MemoryManager
 from core.knowledge_base import KnowledgeBase
 from skills.chart_plotter import ChartPlotter
 from skills.backtester import Backtester
-from ui.modules import tactics, radar, backtest, style, history, rules, library, workshop, patrol, broker_recommend, financial, behavior, hedge, system_check, replay, luck, metrics, watchlist, agents, llm_keys
+from ui.modules import tactics, radar, backtest, style, history, rules, library, workshop, patrol, broker_recommend, financial, behavior, hedge, system_check, replay, luck, metrics, watchlist, agents, llm_keys, blindbox
 
 if 'scanner' not in st.session_state: st.session_state.scanner = MarketScanner("tushare")
 if 'real_portfolio' not in st.session_state: st.session_state.real_portfolio = VirtualPortfolio("data/real_portfolio.json")
@@ -28,14 +28,33 @@ if 'kb' not in st.session_state: st.session_state.kb = KnowledgeBase()
 if 'learner' not in st.session_state: st.session_state.learner = StyleLearner()
 if 'backtester' not in st.session_state: st.session_state.backtester = Backtester()
 
-if 'current_page' not in st.session_state: st.session_state.current_page = "🧘 战术指挥室"
+if 'current_page' not in st.session_state: st.session_state.current_page = "战术指挥室"
 
 with st.sidebar:
     st.title("🧠 AI 交易分身")
-    NAV_OPTIONS = ['🧘 战术指挥室', '👮 AI 巡逻官', '📈 系统KPI', '📊 财务透视', '🏆 券商金股', '🔭 猎手雷达', '👀 观察池', '🛠️ 技能工坊', '⏳ 时光回测', '🔁 决策回放', '🎲 纯运气', '📚 知识库', '🧬 风格实验室', '🧭 行为画像', '🛡️ 对冲模块', '📜 历史军情', '🔑 三脑API Key', '⚖️ 家规与系统', 'Agents', 'System Check']
-    st.session_state.current_page = st.radio("系统导航", NAV_OPTIONS, index=0)
+
+    NAV_GROUPS = {
+        "核心业务": ['战术指挥室', 'AI 巡逻官', '券商金股', '猎手雷达', '观察池', '对冲模块'],
+        "分析评估": ['系统KPI', '财务透视', '时光回测', '决策回放', '风格实验室', '行为画像'],
+        "系统设置": ['家规与系统', '知识库', '三脑 API 密钥', '智能体', '系统体检', '盲盒实验机'],
+        "附加功能": ['技能工坊', '纯运气', '历史军情']
+    }
+
+    st.subheader("系统导航")
+
+    # 获取所有可能的分组，并通过selectbox展示
+    selected_group = st.selectbox("导航分组", list(NAV_GROUPS.keys()))
+
+    # 确定默认选中的索引
+    options = NAV_GROUPS[selected_group]
+    default_index = 0
+    if st.session_state.current_page in options:
+        default_index = options.index(st.session_state.current_page)
+
+    st.session_state.current_page = st.radio("页面选择", options, index=default_index, label_visibility="collapsed")
+
     st.divider()
-    if st.button("🔄 刷新系统"): st.rerun()
+    if st.button("刷新系统", use_container_width=True): st.rerun()
 
 page = st.session_state.current_page
 if "战术指挥室" in page:
@@ -55,7 +74,8 @@ elif "风格实验室" in page: style.render(st.session_state.learner, st.sessio
 elif "行为画像" in page: behavior.render()
 elif "对冲模块" in page: hedge.render(st.session_state.scanner, st.session_state.real_portfolio)
 elif "历史军情" in page: history.render(st.session_state.memory)
-elif "三脑API Key" in page: llm_keys.render()
-elif "Agents" in page: agents.render()
-elif "System Check" in page: system_check.render(st.session_state.scanner, st.session_state.real_portfolio, st.session_state.memory, st.session_state.kb)
+elif "三脑 API 密钥" in page: llm_keys.render()
+elif "智能体" in page: agents.render()
+elif "系统体检" in page: system_check.render(st.session_state.scanner, st.session_state.real_portfolio, st.session_state.memory, st.session_state.kb)
+elif "盲盒实验机" in page: blindbox.render()
 elif "家规与系统" in page: rules.render(st.session_state.memory, st.session_state.scanner)

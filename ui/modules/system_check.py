@@ -7,6 +7,7 @@ import yaml
 
 from skills.data_factory import TushareMaster
 import skills.data_factory as data_factory
+from core.blindbox_report import load_blindbox_health_snapshot
 from core.portfolio import VirtualPortfolio
 from core.memory import MemoryManager
 from core.knowledge_base import KnowledgeBase
@@ -449,12 +450,28 @@ def run_self_check(code, scanner=None, portfolio=None, memory=None, kb=None, dee
 
 
 def render(scanner=None, real_portfolio=None, memory=None, kb=None):
-    st.header("System Check")
+    st.header("系统体检")
+    with st.expander("盲盒实验机", expanded=False):
+        snap = load_blindbox_health_snapshot()
+        if not snap.get("available"):
+            st.info("盲盒实验机尚未运行，先执行一次 `python tools/blindbox_daily_runner.py --once`")
+        else:
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("最近交易日", snap.get("last_trade_date") or "-")
+            c2.metric("当前持仓数", int(snap.get("open_positions", 0) or 0))
+            c3.metric("活跃策略数", int(snap.get("active_strategies", 0) or 0))
+            c4.metric("最近已实现盈亏", f"{float(snap.get('realized_pnl_sum', 0.0) or 0.0):.2f}")
+            st.caption(
+                f"补跑天数={snap.get('processed_days', 0)} | "
+                f"新开仓={snap.get('opened_count', 0)} | "
+                f"已平仓={snap.get('closed_count', 0)} | "
+                f"当前头号策略={snap.get('top_strategy_id', '')} ({snap.get('top_strategy_weight', 0.0):.2f})"
+            )
 
     with st.expander("🤖 三脑状态", expanded=False):
         council = TriBrainCouncil()
         active = list(council.brains.keys())
-        st.write("Active brains:", ", ".join(active) if active else "None")
+        st.write("当前启用脑区：", ", ".join(active) if active else "无")
         for name, meta in council.brains.items():
             st.caption(f"{name}: {meta.get('model')} @ {meta.get('base_url')}")
 
@@ -522,9 +539,9 @@ def render(scanner=None, real_portfolio=None, memory=None, kb=None):
             st.caption("修改后需重启或重新加载应用以生效。")
 
     code = st.text_input("Target Code", value="000001.SZ", key="syscheck_code")
-    deep = st.checkbox("Deep Check (reference/feature/macro)", value=False, key="syscheck_deep")
+    deep = st.checkbox("深度检查（参考/特征/宏观）", value=False, key="syscheck_deep")
 
-    run = st.button("Run Self-Check", type="primary", use_container_width=True)
+    run = st.button("开始体检", type="primary", use_container_width=True)
 
     if run:
         st.session_state["syscheck_result"] = run_self_check(
@@ -540,54 +557,56 @@ def render(scanner=None, real_portfolio=None, memory=None, kb=None):
 
     result = st.session_state.get("syscheck_result")
     if not result:
-        st.info("Click Run Self-Check to generate results")
+        st.info("点击“开始体检”后生成结果")
         return
 
     # 1) Tushare connectivity
-    st.subheader("Tushare Connectivity")
+    st.subheader("数据接口连通性（Tushare）")
     conn = result.get("connectivity", {})
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Token", "OK" if conn.get("token_present") else "MISSING")
-    c2.metric("Pro", "OK" if conn.get("pro_ok") else "MISSING")
-    c3.metric("Last Trade Date", conn.get("last_trade_date") or "N/A")
-    c4.metric("Source", conn.get("source") or "N/A")
+    c1.metric("令牌状态", "正常" if conn.get("token_present") else "缺失")
+    c2.metric("接口实例", "正常" if conn.get("pro_ok") else "缺失")
+    c3.metric("最近交易日", conn.get("last_trade_date") or "无")
+    c4.metric("数据来源", conn.get("source") or "无")
 
     st.caption(
-        f"ts_lib={conn.get('ts_lib')} | ak_lib={conn.get('ak_lib')} | history_rows={conn.get('history_rows')} | token_len={conn.get('token_len')}"
+        f"Tushare库={conn.get('ts_lib')} | AkShare库={conn.get('ak_lib')} | 历史数据行数={conn.get('history_rows')} | 令牌长度={conn.get('token_len')}"
     )
 
     # 2) Interface health
-    st.subheader("Interface Health")
+    st.subheader("接口健康度")
     df_iface = pd.DataFrame(result.get("interfaces", []))
     if not df_iface.empty:
+        df_iface = df_iface.rename(columns={"Interface": "接口", "Status": "状态", "Detail": "详情"})
         st.dataframe(df_iface, use_container_width=True, hide_index=True)
     else:
-        st.warning("Interface list is empty")
+        st.warning("接口列表为空")
 
     # 2.5) Financial interface
-    st.subheader("Financial Interface")
+    st.subheader("财务接口")
     fin_status = result.get("financial", {})
     fin_detail = result.get("financial_detail", {})
     fin_rows = []
     for k in ["income", "balance", "cashflow"]:
         fin_rows.append({
-            "Interface": k,
-            "Status": fin_status.get(k),
-            "Detail": fin_detail.get(k, "")
+            "接口": k,
+            "状态": fin_status.get(k),
+            "详情": fin_detail.get(k, "")
         })
     df_fin = pd.DataFrame(fin_rows)
     if not df_fin.empty:
         st.dataframe(df_fin, use_container_width=True, hide_index=True)
     else:
-        st.warning("Financial interface list is empty")
+        st.warning("财务接口列表为空")
 
     # 3) Parameter coverage
-    st.subheader("Parameter Coverage")
+    st.subheader("参数覆盖率")
     df_cov = pd.DataFrame(result.get("coverage", []))
     if not df_cov.empty:
+        df_cov = df_cov.rename(columns={"Param": "参数", "Status": "状态", "Detail": "详情"})
         st.dataframe(df_cov, use_container_width=True, hide_index=True)
     else:
-        st.warning("Coverage list is empty")
+        st.warning("覆盖列表为空")
 
-    st.caption("Note: morning_briefing_guidance requires a Tactical Room morning briefing run")
+    st.caption("说明：morning_briefing_guidance 需要先在战术室跑一次早报")

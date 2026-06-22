@@ -2,6 +2,7 @@ import datetime
 import uuid
 
 from core.event_bus import EventBus
+from core.protocols import get_protocol_version
 
 
 AGENT_REPORT_EVENT = "agent_report"
@@ -59,6 +60,7 @@ def build_agent_report(
         "tags": _normalize_list(tags),
         "run_id": str(run_id or "").strip(),
         "version": str(version or "").strip() or "1.0",
+        "protocol_version": get_protocol_version(),
         "ts": ts or _now()
     }
 

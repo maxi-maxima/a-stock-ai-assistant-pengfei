@@ -7,6 +7,7 @@ import streamlit as st
 
 from skills.scanner import MarketScanner
 from core.learning_log import log_event
+from core.strategy_display import display_strategy_name
 from core.skill_registry import SkillRegistry
 
 
@@ -52,7 +53,7 @@ def _build_zip_file(file_map):
 
 
 def render(backtester):
-    st.header("⏳ 时光回测 (Strategy Backtester)")
+    st.header("⏳ 时光回测")
 
     scanner = MarketScanner()
     strat_list = scanner.get_strategy_list()
@@ -63,7 +64,7 @@ def render(backtester):
         with st.container():
             c1, c2, c3 = st.columns([1, 1, 2])
             code = c1.text_input("回测标的", "000001.SZ")
-            strategy = c2.selectbox("选择策略", strat_list)
+            strategy = c2.selectbox("选择策略", strat_list, format_func=display_strategy_name)
             backtest_days = c3.slider("回溯历史天数", 100, 1000, 365)
 
         st.divider()
@@ -72,8 +73,8 @@ def render(backtester):
             c1, c2 = st.columns(2)
             opt_mode = c1.selectbox("优化模式", ["简单", "Walk-Forward"])
             window_count = c2.slider("Walk-Forward 窗口数", 2, 6, 3)
-            opt_exec_label = st.selectbox("Execution Model", ["Next Open", "Close"], key="opt_exec")
-            opt_execution = "next_open" if opt_exec_label == "Next Open" else "close"
+            opt_exec_label = st.selectbox("执行模型", ["次日开盘", "当日收盘"], key="opt_exec")
+            opt_execution = "next_open" if opt_exec_label == "次日开盘" else "close"
             oc1, oc2, oc3, oc4 = st.columns(4)
             opt_commission = oc1.number_input("Commission (Optimizer)", 0.0, 0.01, 0.0003, 0.0001, format="%.4f", key="opt_commission")
             opt_slippage = oc2.number_input("Slippage (Optimizer)", 0.0, 0.01, 0.0005, 0.0001, format="%.4f", key="opt_slippage")
@@ -160,14 +161,14 @@ def render(backtester):
         exec_label = col_e.selectbox("成交模型", ["次日开盘", "当日收盘"])
         execution = "next_open" if exec_label == "次日开盘" else "close"
 
-        with st.expander("Trading Costs", expanded=False):
+        with st.expander("交易成本", expanded=False):
             c1, c2, c3, c4 = st.columns(4)
             commission = c1.number_input("Commission", 0.0, 0.01, 0.0003, 0.0001, format="%.4f")
             slippage = c2.number_input("Slippage", 0.0, 0.01, 0.0005, 0.0001, format="%.4f")
             stamp_duty = c3.number_input("Stamp Duty", 0.0, 0.01, 0.001, 0.0001, format="%.4f")
             lot_size = c4.number_input("Lot Size", 1, 1000, 100, 10)
 
-        bench_label = st.selectbox("Benchmark", ["None", "000001.SH (SSE)", "399300.SZ (CSI300)"])
+            bench_label = st.selectbox("基准", ["无", "000001.SH（上证指数）", "399300.SZ（沪深300）"])
         bench_code = None
         if bench_label.startswith("000001"):
             bench_code = "000001.SH"
@@ -281,12 +282,12 @@ def render(backtester):
                 eq_csv = None
                 if eq_df is not None and not eq_df.empty:
                     eq_csv = eq_df.to_csv(index=False)
-                    st.download_button("Download Equity Curve CSV", eq_csv, file_name=f"{code}_equity_curve.csv", mime="text/csv")
+                    st.download_button("下载净值曲线 CSV", eq_csv, file_name=f"{code}_equity_curve.csv", mime="text/csv")
 
                 trades_csv = None
                 if not trades_df.empty:
                     trades_csv = trades_df.to_csv(index=False)
-                    st.download_button("Download Trades CSV", trades_csv, file_name=f"{code}_trades.csv", mime="text/csv")
+                    st.download_button("下载交易明细 CSV", trades_csv, file_name=f"{code}_trades.csv", mime="text/csv")
 
                 report_summary = {
                     "code": code,
@@ -331,7 +332,7 @@ def render(backtester):
                     "trades.csv": trades_csv
                 }
                 report_zip = _build_zip_file(report_files)
-                st.download_button("Download Full Report", report_zip, file_name=f"{code}_report.zip", mime="application/zip")
+                st.download_button("下载完整报告", report_zip, file_name=f"{code}_report.zip", mime="application/zip")
 
                 with st.expander("📝 交易明细"):
                     if not trades_df.empty:
@@ -343,7 +344,7 @@ def render(backtester):
         st.caption("多标的回测会逐个回测并汇总，属于策略稳定性观察。")
         codes_text = st.text_area("标的列表 (逗号/换行)", "000001.SZ, 600519.SH")
         m1, m2 = st.columns(2)
-        strategy_m = m1.selectbox("策略", strat_list, key="multi_strategy")
+        strategy_m = m1.selectbox("策略", strat_list, key="multi_strategy", format_func=display_strategy_name)
         backtest_days_m = m2.slider("回溯历史天数", 100, 1000, 365, key="multi_days")
 
         col_a, col_b, col_c = st.columns(3)
@@ -356,19 +357,19 @@ def render(backtester):
         exec_label = col_e.selectbox("成交模型", ["次日开盘", "当日收盘"], key="multi_exec")
         execution = "next_open" if exec_label == "次日开盘" else "close"
 
-        with st.expander("Trading Costs (Multi)", expanded=False):
+        with st.expander("交易成本（多标的）", expanded=False):
             c1m, c2m, c3m, c4m = st.columns(4)
             commission_m = c1m.number_input("Commission", 0.0, 0.01, 0.0003, 0.0001, format="%.4f", key="multi_comm")
             slippage_m = c2m.number_input("Slippage", 0.0, 0.01, 0.0005, 0.0001, format="%.4f", key="multi_slip")
             stamp_duty_m = c3m.number_input("Stamp Duty", 0.0, 0.01, 0.001, 0.0001, format="%.4f", key="multi_duty")
             lot_size_m = c4m.number_input("Lot Size", 1, 1000, 100, 10, key="multi_lot")
 
-        weight_mode = st.selectbox("Weight Mode", ["Equal Weight", "Custom Weights"], key="multi_weight_mode")
-        weights_text = ""
-        if weight_mode == "Custom Weights":
-            weights_text = st.text_input("Weights (comma separated)", "", key="multi_weights")
+            weight_mode = st.selectbox("权重模式", ["等权", "自定义权重"], key="multi_weight_mode")
+            weights_text = ""
+            if weight_mode == "自定义权重":
+                weights_text = st.text_input("自定义权重（逗号分隔）", "", key="multi_weights")
 
-        bench_label_m = st.selectbox("Benchmark", ["None", "000001.SH (SSE)", "399300.SZ (CSI300)"], key="multi_bench")
+            bench_label_m = st.selectbox("基准", ["无", "000001.SH（上证指数）", "399300.SZ（沪深300）"], key="multi_bench")
         bench_code_m = None
         if bench_label_m.startswith("000001"):
             bench_code_m = "000001.SH"
@@ -380,9 +381,9 @@ def render(backtester):
             if not codes:
                 st.warning("请先输入标的列表。")
             else:
-                weights = _parse_weights(weights_text) if weight_mode == "Custom Weights" else []
-                if weight_mode == "Custom Weights" and len(weights) != len(codes):
-                    st.warning("Weights count mismatch; using equal weights.")
+                weights = _parse_weights(weights_text) if weight_mode == "自定义权重" else []
+                if weight_mode == "自定义权重" and len(weights) != len(codes):
+                    st.warning("权重数量不匹配，已自动改为等权。")
                     weights = []
                 rows = []
                 equity_curves = []
@@ -432,7 +433,7 @@ def render(backtester):
                 st.dataframe(df_rows, use_container_width=True)
                 summary_csv = df_rows.to_csv(index=False) if not df_rows.empty else None
                 if summary_csv:
-                    st.download_button("Download Summary CSV", summary_csv, file_name="multi_summary.csv", mime="text/csv")
+                    st.download_button("下载汇总 CSV", summary_csv, file_name="multi_summary.csv", mime="text/csv")
 
                 portfolio = None
                 ok_rows = [r for r in rows if "error" not in r]
@@ -446,16 +447,16 @@ def render(backtester):
                     if equity_curves:
                         portfolio = backtester.combine_equity_curves(equity_curves, weights=equity_weights, base_value=1.0)
                         if portfolio is not None and not portfolio.empty:
-                            if weight_mode == "Custom Weights" and equity_weights:
-                                st.caption("Portfolio curve uses custom weights.")
+                            if weight_mode == "自定义权重" and equity_weights:
+                                st.caption("组合曲线使用自定义权重。")
                             else:
-                                st.caption("Portfolio curve uses equal-weighted normalized equity.")
+                                st.caption("组合曲线使用等权归一化净值。")
                             pm = backtester.compute_metrics_from_equity_curve(portfolio, base_capital=1.0)
                             p1, p2, p3, p4 = st.columns(4)
-                            p1.metric("Portfolio Return", f"{pm.get('return_pct', 0):.2f}%")
-                            p2.metric("Annualized", f"{pm.get('annualized_return', 0):.2f}%")
-                            p3.metric("Max Drawdown", f"{(pm.get('max_drawdown', 0) or 0)*100:.2f}%")
-                            p4.metric("Sharpe", f"{pm.get('sharpe', 0):.2f}")
+                            p1.metric("组合收益", f"{pm.get('return_pct', 0):.2f}%")
+                            p2.metric("组合年化", f"{pm.get('annualized_return', 0):.2f}%")
+                            p3.metric("组合最大回撤", f"{(pm.get('max_drawdown', 0) or 0)*100:.2f}%")
+                            p4.metric("组合夏普", f"{pm.get('sharpe', 0):.2f}")
 
                             bench_df = None
                             if bench_code_m:
@@ -472,12 +473,12 @@ def render(backtester):
                                 st.plotly_chart(fig, use_container_width=True)
 
                             port_csv = portfolio.to_csv(index=False)
-                            st.download_button("Download Portfolio Equity CSV", port_csv, file_name="portfolio_equity.csv", mime="text/csv")
+                            st.download_button("下载组合净值 CSV", port_csv, file_name="portfolio_equity.csv", mime="text/csv")
 
                 if summary_csv:
                     report_summary = {
                         "codes": codes,
-                        "weights_input": weights if weight_mode == "Custom Weights" else "equal",
+                    "weights_input": weights if weight_mode == "自定义权重" else "equal",
                         "weights_used": equity_weights,
                         "strategy": strategy_m,
                         "backtest_days": int(backtest_days_m),
@@ -504,4 +505,4 @@ def render(backtester):
                     if portfolio is not None and not portfolio.empty:
                         report_files["portfolio_equity.csv"] = portfolio.to_csv(index=False)
                     report_zip = _build_zip_file(report_files)
-                    st.download_button("Download Full Report (Multi)", report_zip, file_name="multi_report.zip", mime="application/zip")
+                    st.download_button("下载完整报告（多标的）", report_zip, file_name="multi_report.zip", mime="application/zip")

@@ -63,6 +63,16 @@ def _parse_ts(ts):
     return None
 
 
+def _outcome_weight(payload):
+    payload = payload if isinstance(payload, dict) else {}
+    kind = str(payload.get("eval_type") or payload.get("outcome_type") or "").strip().lower()
+    if kind in ("mark_to_market", "mtm", "unrealized"):
+        return 0.35
+    if kind in ("final", "realized", "sell_realized"):
+        return 1.0
+    return 1.0
+
+
 def _load_event_bus():
     if not os.path.exists(EVENT_BUS_PATH):
         return []
@@ -169,6 +179,9 @@ def update_strategy_rewards():
             pnl_pct = float(pnl_pct)
         except Exception:
             continue
+        weight = _outcome_weight(payload)
+        if weight <= 0:
+            continue
 
         signal_source = payload.get("signal_source") if isinstance(payload.get("signal_source"), dict) else {}
         if not signal_source:
@@ -179,7 +192,7 @@ def update_strategy_rewards():
 
         strategies = _get_strategies_from_signal(signal_source)
         for s in strategies:
-            reg.update_reward(s, pnl_pct, source="outcome")
+            reg.update_reward(s, pnl_pct * weight, source=f"outcome:{payload.get('eval_type') or 'default'}")
             updated += 1
 
         if ts and (not max_ts or ts > max_ts):
@@ -224,14 +237,17 @@ def build_governor_report(days=60):
             pnl_pct = float(pnl_pct)
         except Exception:
             continue
+        weight = _outcome_weight(payload)
+        if weight <= 0:
+            continue
         signal_source = payload.get("signal_source") if isinstance(payload.get("signal_source"), dict) else {}
         strategies = _get_strategies_from_signal(signal_source)
         for s in strategies:
-            row = stats.setdefault(s, {"samples": 0, "wins": 0, "pnl_sum": 0.0, "last_ts": ""})
-            row["samples"] += 1
-            row["pnl_sum"] += pnl_pct
+            row = stats.setdefault(s, {"samples": 0.0, "wins": 0.0, "pnl_sum": 0.0, "last_ts": ""})
+            row["samples"] += weight
+            row["pnl_sum"] += pnl_pct * weight
             if pnl_pct > 0:
-                row["wins"] += 1
+                row["wins"] += weight
             if e.get("ts") and (not row["last_ts"] or e.get("ts") > row["last_ts"]):
                 row["last_ts"] = e.get("ts")
 
@@ -270,13 +286,14 @@ def build_governor_report(days=60):
     }
     for name, s in stats.items():
         samples = int(s.get("samples", 0) or 0)
+        samples_effective = float(s.get("samples", 0) or 0)
         pnl_sum = float(s.get("pnl_sum", 0) or 0)
-        wins = int(s.get("wins", 0) or 0)
-        avg_pnl = pnl_sum / samples if samples else 0.0
-        win_rate = wins / samples if samples else 0.0
+        wins = float(s.get("wins", 0) or 0)
+        avg_pnl = pnl_sum / samples_effective if samples_effective else 0.0
+        win_rate = wins / samples_effective if samples_effective else 0.0
 
         status = "seed"
-        if samples >= min_samples:
+        if samples_effective >= float(min_samples):
             if avg_pnl <= disable_below or win_rate < min_win_rate:
                 status = "disabled"
             elif avg_pnl <= watch_below:
@@ -287,6 +304,7 @@ def build_governor_report(days=60):
         report["strategies"][name] = {
             "status": status,
             "samples": samples,
+            "samples_effective": round(samples_effective, 2),
             "win_rate": win_rate,
             "avg_pnl": avg_pnl,
             "last_ts": s.get("last_ts", "")

@@ -11,3 +11,8 @@ openai
 requests
 schedule
 PyYAML
+ag2[openai]
+composio
+browser-use
+letta-client
+agentlightning

@@ -367,6 +367,97 @@ def _get_strategy_from_signal(signal_source):
     return None
 
 
+def _decision_action(payload):
+    if not isinstance(payload, dict):
+        return ""
+    return str(payload.get("action") or "").strip().upper()
+
+
+def _decision_scope(decision):
+    if not isinstance(decision, dict):
+        return "advisory"
+    payload = decision.get("payload", {}) if isinstance(decision.get("payload", {}), dict) else {}
+    raw = payload.get("decision_scope") or payload.get("intent") or payload.get("mode")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip().lower()
+    meta = payload.get("meta", {}) if isinstance(payload.get("meta", {}), dict) else {}
+    if bool(meta.get("auto_execute")):
+        return "order"
+    source = str(decision.get("source") or "").strip().lower()
+    if source in {"paper_broker", "live_broker", "real_broker", "trade_engine", "execution_engine"}:
+        return "order"
+    return "advisory"
+
+
+def _decision_requires_execution(decision):
+    payload = decision.get("payload", {}) if isinstance(decision, dict) and isinstance(decision.get("payload", {}), dict) else {}
+    action = _decision_action(payload)
+    if action not in ("BUY", "SELL"):
+        return False
+    scope = _decision_scope(decision)
+    return scope in {"order", "execution", "auto_trade", "trade"}
+
+
+def _calc_execution_coverage(decisions, executions):
+    """
+    Execution linkage should only be required for actionable decisions (BUY/SELL).
+    HOLD decisions are valid no-trade decisions and should not lower execution coverage.
+    """
+    actionable_ids = set()
+    hold_count = 0
+    other_count = 0
+    advisory_actionable_count = 0
+
+    for d in decisions:
+        if not isinstance(d, dict):
+            continue
+        did = d.get("decision_id")
+        if not did:
+            continue
+        payload = d.get("payload", {}) if isinstance(d.get("payload", {}), dict) else {}
+        action = _decision_action(payload)
+        if action in ("BUY", "SELL"):
+            if _decision_requires_execution(d):
+                actionable_ids.add(did)
+            else:
+                advisory_actionable_count += 1
+        elif action == "HOLD":
+            hold_count += 1
+        else:
+            other_count += 1
+
+    exec_ids = set()
+    for e in executions:
+        if not isinstance(e, dict):
+            continue
+        did = e.get("decision_id")
+        if did:
+            exec_ids.add(did)
+
+    linked_count = len(actionable_ids.intersection(exec_ids))
+    actionable_count = len(actionable_ids)
+    missing_count = max(0, actionable_count - linked_count)
+    execution_rate = (linked_count / actionable_count) if actionable_count else 1.0
+
+    return {
+        "actionable_count": actionable_count,
+        "advisory_actionable_count": advisory_actionable_count,
+        "hold_count": hold_count,
+        "other_count": other_count,
+        "linked_count": linked_count,
+        "missing_count": missing_count,
+        "execution_rate": execution_rate,
+    }
+
+
+def _count_linked_outcome_decisions(decision_ids, outcome_ids):
+    decision_ids = set(decision_ids or [])
+    outcome_ids = set(outcome_ids or [])
+    if not decision_ids or not outcome_ids:
+        return 0
+    return len(decision_ids.intersection(outcome_ids))
+
+
 def _load_skill_stats(db_path):
     if not os.path.exists(db_path):
         return None
@@ -405,21 +496,66 @@ def compute_loop_health(days=60, limit=None):
     executions = [e for e in events if isinstance(e, dict) and e.get("event") == "execution"]
     outcomes = [e for e in events if isinstance(e, dict) and e.get("event") == "outcome"]
 
+    decision_map = {}
+    for d in decisions:
+        if not isinstance(d, dict):
+            continue
+        did = d.get("decision_id")
+        payload = d.get("payload", {}) if isinstance(d.get("payload", {}), dict) else {}
+        if did and isinstance(payload, dict):
+            decision_map[str(did)] = payload
+
     decision_ids = set(d.get("decision_id") for d in decisions if d.get("decision_id"))
     exec_ids = set(e.get("decision_id") for e in executions if e.get("decision_id"))
-    out_ids = set(o.get("decision_id") for o in outcomes if o.get("decision_id"))
+    exec_cov = _calc_execution_coverage(decisions, executions)
+    decisions_actionable_n = int(exec_cov.get("actionable_count", 0) or 0)
+    decisions_advisory_actionable_n = int(exec_cov.get("advisory_actionable_count", 0) or 0)
+    decisions_hold_n = int(exec_cov.get("hold_count", 0) or 0)
+    decisions_other_n = int(exec_cov.get("other_count", 0) or 0)
+    executions_linked_actionable_n = int(exec_cov.get("linked_count", 0) or 0)
 
-    decisions_no_exec = sum(1 for d in decisions if d.get("decision_id") and d.get("decision_id") not in exec_ids)
+    out_ids = set()
+    for o in outcomes:
+        if not isinstance(o, dict):
+            continue
+        did = o.get("decision_id")
+        payload = o.get("payload", {}) if isinstance(o.get("payload", {}), dict) else {}
+        if not did:
+            did = payload.get("origin_decision_id") or payload.get("decision_id")
+        if did:
+            out_ids.add(did)
+
+    decisions_no_exec = int(exec_cov.get("missing_count", 0) or 0)
     decisions_no_out = sum(1 for d in decisions if d.get("decision_id") and d.get("decision_id") not in out_ids)
 
     exec_missing_id = sum(1 for e in executions if not e.get("decision_id"))
-    out_missing_id = sum(1 for o in outcomes if not o.get("decision_id"))
-    out_orphan = sum(1 for o in outcomes if o.get("decision_id") and o.get("decision_id") not in decision_ids)
+    out_missing_id = 0
+    out_orphan = 0
+    for o in outcomes:
+        if not isinstance(o, dict):
+            continue
+        payload = o.get("payload", {}) if isinstance(o.get("payload", {}), dict) else {}
+        did = o.get("decision_id") or payload.get("origin_decision_id") or payload.get("decision_id")
+        if not did:
+            out_missing_id += 1
+            continue
+        if did not in decision_ids:
+            out_orphan += 1
 
     out_with_strategy = 0
     for o in outcomes:
         payload = o.get("payload", {}) if isinstance(o.get("payload", {}), dict) else {}
-        strat = _get_strategy_from_signal(payload.get("signal_source"))
+        signal_source = payload.get("signal_source") if isinstance(payload.get("signal_source"), dict) else {}
+        strat = _get_strategy_from_signal(signal_source)
+        if not strat:
+            did = o.get("decision_id") or payload.get("origin_decision_id") or payload.get("decision_id")
+            d = decision_map.get(str(did)) if did is not None else None
+            if isinstance(d, dict):
+                strat = _get_strategy_from_signal(d.get("signal_source"))
+        if not strat:
+            eval_type = str(payload.get("eval_type") or payload.get("outcome_type") or "").strip().lower()
+            if eval_type in ("mark_to_market", "mtm", "unrealized"):
+                strat = "tri_brain_default"
         if strat:
             out_with_strategy += 1
 
@@ -470,15 +606,16 @@ def compute_loop_health(days=60, limit=None):
     decisions_n = len(decisions)
     executions_n = len(executions)
     outcomes_n = len(outcomes)
+    outcomes_linked_n = _count_linked_outcome_decisions(decision_ids, out_ids)
     outcome_attr_rate = (out_with_strategy / outcomes_n) if outcomes_n else 0.0
     sell_attr_rate = (sell_with_strategy / len(sells)) if sells else 0.0
-    exec_rate = (executions_n / decisions_n) if decisions_n else 0.0
-    outcome_rate = (outcomes_n / decisions_n) if decisions_n else 0.0
+    exec_rate = float(exec_cov.get("execution_rate", 0.0) or 0.0)
+    outcome_rate = (outcomes_linked_n / decisions_n) if decisions_n else 0.0
     decision_event_missing = 1 if (trade_total > 0 and decisions_n == 0) else 0
 
     score = 100.0
-    if decisions_n:
-        score -= 40.0 * (decisions_no_exec / decisions_n)
+    if decisions_actionable_n:
+        score -= 40.0 * (decisions_no_exec / decisions_actionable_n)
         score -= 30.0 * (decisions_no_out / decisions_n)
     if executions_n:
         score -= 10.0 * (exec_missing_id / executions_n)
@@ -502,8 +639,14 @@ def compute_loop_health(days=60, limit=None):
 
     return {
         "decisions": len(decisions),
+        "decisions_actionable": decisions_actionable_n,
+        "decisions_advisory_actionable": decisions_advisory_actionable_n,
+        "decisions_hold": decisions_hold_n,
+        "decisions_other_action": decisions_other_n,
         "executions": len(executions),
+        "executions_linked_actionable": executions_linked_actionable_n,
         "outcomes": len(outcomes),
+        "outcome_linked_decisions": outcomes_linked_n,
         "decisions_no_execution": decisions_no_exec,
         "decisions_no_outcome": decisions_no_out,
         "execution_missing_id": exec_missing_id,
@@ -525,6 +668,8 @@ def compute_loop_health(days=60, limit=None):
         "health_score": score,
         "health_status": status,
         "execution_rate": exec_rate,
+        "execution_coverage_mode": "order_intent_only",
+        "execution_coverage_applicable": decisions_actionable_n > 0,
         "outcome_rate": outcome_rate,
         "outcome_strategy_attrib_rate": outcome_attr_rate,
         "sell_strategy_attrib_rate": sell_attr_rate
