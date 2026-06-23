@@ -22,6 +22,14 @@ python -m unittest discover -s tests -v
 python -m compileall -q core modules skills ui tests tools dashboard.py doctor.py
 ```
 
+Quick health report for issues and automation:
+
+```bash
+python doctor.py --json
+```
+
+The JSON output summarizes missing dependencies, missing core files, data-file warnings, and module-load failures. Attach it to GitHub issues when asking for help.
+
 > ⚠️ **免责声明**: 本系统仅供**教育和研究**目的，**不构成投资建议**。使用本系统进行交易的风险由用户自行承担。
 
 ---

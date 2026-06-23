@@ -3,6 +3,7 @@ import sys
 import json
 import time
 import importlib.util
+import argparse
 
 from core.bootstrap import init_runtime
 init_runtime()
@@ -12,6 +13,37 @@ GREEN = '\033[92m'
 RED = '\033[91m'
 YELLOW = '\033[93m'
 RESET = '\033[0m'
+
+DEPENDENCY_MODULES = [
+    "pandas",
+    "streamlit",
+    "plotly",
+    "tushare",
+    "akshare",
+]
+
+CRITICAL_FILES = [
+    "dashboard.py",
+    "ui/modules/tactics.py",
+    "ui/modules/radar.py",
+    "core/portfolio.py",
+    "core/strategy_library.py",
+    "core/memory.py",
+    "skills/scanner.py",
+    "skills/dealer_hunter.py",
+]
+
+DATA_FILES = [
+    "data/real_portfolio.json",
+    "data/paper_portfolio.json",
+    "data/my_strategies.json",
+    "data/knowledge_base.json",
+]
+
+MODULE_CHECKS = [
+    ("core.strategy_library", "core/strategy_library.py"),
+    ("skills.scanner", "skills/scanner.py"),
+]
 
 def log(status, msg):
     if status == "OK":
@@ -71,7 +103,104 @@ def check_import(module_name, file_path=None):
         log("ERR", f"模块代码有错 {module_name}: {e}")
         return False
 
-def main():
+def collect_diagnostics(
+    root=None,
+    dependency_modules=None,
+    critical_files=None,
+    data_files=None,
+    module_checks=None,
+):
+    root = os.fspath(root or os.getcwd())
+    dependency_modules = dependency_modules if dependency_modules is not None else DEPENDENCY_MODULES
+    critical_files = critical_files if critical_files is not None else CRITICAL_FILES
+    data_files = data_files if data_files is not None else DATA_FILES
+    module_checks = module_checks if module_checks is not None else MODULE_CHECKS
+
+    checks = []
+    checks.extend(_dependency_check(module_name) for module_name in dependency_modules)
+    checks.extend(_file_check(root, file_path) for file_path in critical_files)
+    checks.extend(_data_file_check(root, file_path) for file_path in data_files)
+    checks.extend(_module_file_check(root, module_name, file_path) for module_name, file_path in module_checks)
+
+    summary = {
+        "total": len(checks),
+        "passed": sum(1 for check in checks if check["status"] == "ok"),
+        "failed": sum(1 for check in checks if check["status"] == "fail"),
+        "warnings": sum(1 for check in checks if check["status"] == "warn"),
+        "missing_files": sum(1 for check in checks if check.get("kind") == "file" and check.get("reason") == "missing"),
+        "missing_dependencies": sum(1 for check in checks if check.get("kind") == "dependency" and check.get("reason") == "missing"),
+    }
+    return {
+        "ok": summary["failed"] == 0,
+        "summary": summary,
+        "checks": checks,
+    }
+
+
+def _dependency_check(module_name):
+    try:
+        __import__(module_name)
+        return {"kind": "dependency", "name": module_name, "status": "ok"}
+    except ImportError as exc:
+        return {"kind": "dependency", "name": module_name, "status": "fail", "reason": "missing", "message": str(exc)}
+    except Exception as exc:
+        return {"kind": "dependency", "name": module_name, "status": "fail", "reason": "error", "message": str(exc)}
+
+
+def _file_check(root, file_path):
+    exists = os.path.exists(os.path.join(root, file_path))
+    return {
+        "kind": "file",
+        "path": file_path,
+        "status": "ok" if exists else "fail",
+        "reason": "exists" if exists else "missing",
+    }
+
+
+def _data_file_check(root, file_path):
+    full_path = os.path.join(root, file_path)
+    if not os.path.exists(full_path):
+        return {
+            "kind": "data_file",
+            "path": file_path,
+            "status": "warn",
+            "reason": "not_created",
+        }
+    try:
+        with open(full_path, "r", encoding="utf-8") as f:
+            json.load(f)
+        return {"kind": "data_file", "path": file_path, "status": "ok"}
+    except json.JSONDecodeError as exc:
+        return {"kind": "data_file", "path": file_path, "status": "fail", "reason": "invalid_json", "message": str(exc)}
+    except Exception as exc:
+        return {"kind": "data_file", "path": file_path, "status": "fail", "reason": "read_error", "message": str(exc)}
+
+
+def _module_file_check(root, module_name, file_path):
+    full_path = os.path.join(root, file_path)
+    try:
+        spec = importlib.util.spec_from_file_location(module_name, full_path)
+        if not spec or not spec.loader:
+            return {"kind": "module", "name": module_name, "path": file_path, "status": "fail", "reason": "missing_spec"}
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return {"kind": "module", "name": module_name, "path": file_path, "status": "ok"}
+    except ImportError as exc:
+        return {"kind": "module", "name": module_name, "path": file_path, "status": "fail", "reason": "missing_import", "message": str(exc)}
+    except Exception as exc:
+        return {"kind": "module", "name": module_name, "path": file_path, "status": "fail", "reason": "error", "message": str(exc)}
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Run project health checks.")
+    parser.add_argument("--json", action="store_true", help="write a machine-readable diagnostic report")
+    args = parser.parse_args(argv)
+
+    if args.json:
+        report = collect_diagnostics()
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0 if report["ok"] else 1
+
     print("="*50)
     print(" AI 系统独立急救医生 (Standalone Doctor)")
     print("="*50)
@@ -134,6 +263,7 @@ def main():
             input("按回车键退出...")
     except EOFError:
         pass
+    return 0 if missing_count == 0 else 1
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
