@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Added `python doctor.py --markdown` to generate a GitHub issue-ready diagnostic report.
+
 ## v1.1.0 - 2026-06-23
 
 ### Added

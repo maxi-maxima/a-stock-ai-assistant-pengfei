@@ -26,9 +26,10 @@ Quick health report for issues and automation:
 
 ```bash
 python doctor.py --json
+python doctor.py --markdown
 ```
 
-The JSON output summarizes missing dependencies, missing core files, data-file warnings, and module-load failures. Attach it to GitHub issues when asking for help.
+The JSON output supports automation. The Markdown output summarizes missing dependencies, missing core files, data-file warnings, and module-load failures in a GitHub issue-ready format.
 
 > ⚠️ **免责声明**: 本系统仅供**教育和研究**目的，**不构成投资建议**。使用本系统进行交易的风险由用户自行承担。
 
