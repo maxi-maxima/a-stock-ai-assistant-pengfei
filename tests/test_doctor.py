@@ -75,8 +75,35 @@ class DoctorTest(unittest.TestCase):
         self.assertIn("# AI Trading Avatar Doctor Report", markdown)
         self.assertIn("Status: **FAIL**", markdown)
         self.assertIn("| Failed | 1 |", markdown)
-        self.assertIn("| file | dashboard.py | fail | missing |", markdown)
-        self.assertIn("| data_file | data/my_strategies.json | warn | not_created |", markdown)
+        self.assertIn("| Kind | Target | Status | Reason | Message |", markdown)
+        self.assertIn("| file | dashboard.py | fail | missing | - |", markdown)
+        self.assertIn("| data_file | data/my_strategies.json | warn | not_created | - |", markdown)
+
+    def test_render_markdown_report_escapes_table_cells(self):
+        report = {
+            "ok": False,
+            "summary": {
+                "total": 1,
+                "passed": 0,
+                "failed": 1,
+                "warnings": 0,
+                "missing_files": 0,
+                "missing_dependencies": 0,
+            },
+            "checks": [
+                {
+                    "kind": "module",
+                    "path": "core/a|b.py",
+                    "status": "fail",
+                    "reason": "error",
+                    "message": "bad | import\nsecond line",
+                },
+            ],
+        }
+
+        markdown = doctor.render_markdown_report(report)
+
+        self.assertIn("| module | core/a\\|b.py | fail | error | bad \\| import second line |", markdown)
 
     def test_main_markdown_outputs_issue_ready_report(self):
         stdout = StringIO()
